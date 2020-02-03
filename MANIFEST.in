@@ -1,0 +1,8 @@
+include LICENSE
+include README.md
+exclude MANIFEST.in
+recursive-include docs *
+recursive-include src/senaite/core/supermodel *
+recursive-exclude src/senaite/core/supermodel *.pyc
+recursive-exclude src/senaite/core/supermodel/tests *
+recursive-exclude src/senaite/core/supermodel/docs *
