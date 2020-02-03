@@ -1,0 +1,38 @@
+{
+  "name": "senaite.core.spotlight",
+  "version": "1.0.0",
+  "description": "MacOS like Spotlight Search for SENAITE",
+  "main": "senaite.core.spotlight.js",
+  "scripts": {
+    "build": "webpack -p",
+    "watch": "webpack -d --watch"
+  },
+  "babel": {
+    "presets": [
+      "@babel/preset-env"
+    ],
+    "plugins": [
+      "@babel/plugin-proposal-class-properties"
+    ]
+  },
+  "author": "RIDING BYTES & NARALABS",
+  "license": "GPL-2.0-only",
+  "devDependencies": {
+    "@babel/core": "^7.8.4",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/preset-env": "^7.8.4",
+    "babel-loader": "^8.0.6",
+    "coffee-loader": "^0.9.0",
+    "coffeescript": "^2.5.1",
+    "css-loader": "^3.4.2",
+    "sass-loader": "^8.0.2",
+    "style-loader": "^1.1.3",
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.10"
+  },
+  "dependencies": {
+    "backbone": "^1.4.0",
+    "lodash": "^4.17.15",
+    "node-sass": "^4.13.1"
+  }
+}

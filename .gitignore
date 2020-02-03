@@ -5,8 +5,10 @@ parts
 var
 develop-eggs
 eggs
+node_modules
 src/senaite.*
 dist
 build
 *.pyc
 *.egg-info
+
