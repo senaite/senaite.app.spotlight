@@ -1,5 +1,7 @@
 const path = require("path");
 const webpack = require("webpack");
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+
 
 module.exports = {
   entry: {
@@ -21,6 +23,7 @@ module.exports = {
         use: ["babel-loader"]
       }, {
         test: /\.(css|scss|sass)$/,
+        exclude: [/node_modules/],
         use: ["style-loader", "css-loader", "sass-loader"]
       }
     ]
@@ -28,9 +31,10 @@ module.exports = {
   plugins: [
     // e.g. https://webpack.js.org/plugins/provide-plugin/
     // use underscore directly in code
-    new webpack.ProvidePlugin({
-      underscore: "lodash"
-    })
+    // new webpack.ProvidePlugin({
+    //   underscore: "lodash"
+    // }),
+    new BundleAnalyzerPlugin()
   ],
   externals: {
     // https://webpack.js.org/configuration/externals

@@ -1,5 +1,6 @@
-import Backbone from "backbone"
+import { Model, View, Collection } from "backbone"
 import "./spotlight.scss"
+import { template, debounce, each } from "underscore"
 
 
 ###* DOCUMENT READY ENTRY POINT ###
@@ -71,7 +72,7 @@ class Spotlight
 ### MODELS ###
 
 # Single search result
-class SearchResult extends Backbone.Model
+class SearchResult extends Model
   defaults:
     id: ""
     title: ""
@@ -82,16 +83,16 @@ class SearchResult extends Backbone.Model
     parent_url: ""
 
 # Collection of search results
-class SearchResults extends Backbone.Collection
+class SearchResults extends Collection
   model: SearchResult
 
 
 ### VIEWS ###
 
 # Renders a single search result
-class ResultView extends Backbone.View
+class ResultView extends View
   tagName: "tr"
-  template: underscore.template $('#item-template').html()
+  template: template $('#item-template').html()
 
   render: ->
     @$el.html @template @model.toJSON()
@@ -99,12 +100,12 @@ class ResultView extends Backbone.View
 
 
 # Renders all search results
-class ResultsView extends Backbone.View
+class ResultsView extends View
   tagName: "table"
   className: "table results-table"
   id: "search-results"
 
-  template: underscore.template $('#results-template').html()
+  template: template $('#results-template').html()
 
   initialize: ->
     # this is triggered when a new set of results is loaded into the collection.
@@ -127,7 +128,7 @@ class ResultsView extends Backbone.View
 
 
 # The search view wraps all other views below and does not render itself
-class SearchView extends Backbone.View
+class SearchView extends View
   el: "#spotlight"
 
   initialize: ->
@@ -199,7 +200,7 @@ class SearchView extends Backbone.View
 
 ### CONTROLLERS ###
 
-class SpotlightController extends Backbone.View
+class SpotlightController extends View
   el: $("#spotlight")
 
   initialize: ->
@@ -217,7 +218,7 @@ class SpotlightController extends Backbone.View
     @searchView.render()
 
     # debounce the search to avoid request flooding
-    @lazySearch = underscore.debounce(@search, 500)
+    @lazySearch = debounce(@search, 500)
 
     # The view notifies us when the user entered something in the search field
     @searchView.bind "query:changed", @lazySearch, @
@@ -236,7 +237,7 @@ class SpotlightController extends Backbone.View
     me = this
     # execute the search
     $.getJSON url, q, (data) ->
-      underscore.each data.items, (result, index) ->
+      each data.items, (result, index) ->
         searchResult = new SearchResult(result)
         # add the new search result to the collection
         me.searchResults.add searchResult
