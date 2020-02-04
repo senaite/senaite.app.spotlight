@@ -48,55 +48,55 @@ The results dictionary has to provide at least a list of `items`, where each
 item is a dictionary containing this information:
 
 ```python
-    {
-        "id": id,
-        "title": title,
-        "title_or_id": title or id,
-        "description": description,
-        "url": url,
-        "parent_title": parent_title,
-        "parent_url": parent_url,
-        "icon": icon,
-    }
+{
+    "id": id,
+    "title": title,
+    "title_or_id": title or id,
+    "description": description,
+    "url": url,
+    "parent_title": parent_title,
+    "parent_url": parent_url,
+    "icon": icon,
+}
 ```
 
 A simple implementation looks like this:
 
 ```python
-    dummy_item = {
-        "id": "test",
-        "title": "Test Item",
-        "title_or_id": "Test Item",
-        "description": "A search result item",
-        "url": "",
-        "parent_title": "",
-        "parent_url": "",
-        "icon": "",
-    }
+dummy_item = {
+    "id": "test",
+    "title": "Test Item",
+    "title_or_id": "Test Item",
+    "description": "A search result item",
+    "url": "",
+    "parent_title": "",
+    "parent_url": "",
+    "icon": "",
+}
 
-    @implementer(ISpotlightSearchAdapter)
-    class MySpotlightSearchAdapter(object):
-        """Spotlight Search Adapter
-        """
-        def __init__(self, context, request):
-            self.context = context
-            self.request = request
+@implementer(ISpotlightSearchAdapter)
+class MySpotlightSearchAdapter(object):
+    """Spotlight Search Adapter
+    """
+    def __init__(self, context, request):
+        self.context = context
+        self.request = request
 
-        def __call__(self):
-            items = [dummy_item]
+    def __call__(self):
+        items = [dummy_item]
 
-            return {
-                "count": len(items),
-                "items": items,
-          }
+        return {
+            "count": len(items),
+            "items": items,
+      }
 ```
 
 And get registered like this:
 
 ```xml
-    <!-- A custom Spotlight Search Adapter -->
-    <adapter
-        for="*
-            .interfaces.IMyBrowserLayer"
-        factory=".adapters.MySpotlightSearchAdapter" />
+<!-- A custom Spotlight Search Adapter -->
+<adapter
+    for="*
+        .interfaces.IMyBrowserLayer"
+    factory=".adapters.MySpotlightSearchAdapter" />
 ```
