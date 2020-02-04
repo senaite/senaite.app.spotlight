@@ -41,11 +41,11 @@ See the screencast how to use it: https://www.youtube.com/watch?v=AIA5atToc-c
 The spotlight search calls an multi adapter to get the search results.
 
 This adapter needs to implement the `ISpotlightSearchAdapter` and adapts the
-context and the request and returns a dictionary containing the search Vresults
-when calling it.
+context and the request. It must be implemented that it returns a dictionary
+containing the search results when calling it.
 
 The results dictionary has to provide at least a list of `items`, where each
-item is a dictionary containing this information:
+item is a dictionary containing the following data:
 
 ```python
 {
@@ -91,7 +91,7 @@ class MySpotlightSearchAdapter(object):
       }
 ```
 
-And get registered like this:
+And is registered like this:
 
 ```xml
 <!-- A custom Spotlight Search Adapter -->
@@ -99,4 +99,35 @@ And get registered like this:
     for="*
         .interfaces.IMyBrowserLayer"
     factory=".adapters.MySpotlightSearchAdapter" />
+```
+
+Note that the custom adapter needs to be more specific than the default adapter.
+Therefore, adapting it either to your custom browser layer or to a specific
+content type interface.
+
+
+## Development
+
+The JavaScript code for `senaite.core.spotlight` is built via
+[Webpack](https://webpack.js.org/). To setup the development environment, go to
+the root of this package install the required dependencies with `yarn`:
+
+```shell
+$ yarn install
+```
+
+Note: You need to have `node` installed.
+
+The JavaScript code is located at `src/senaite/core/spotlight/static/src`.
+
+After this, you can start watching for changes in the code files:
+
+```shell
+$ yarn watch
+```
+
+When you are done, you can create a production build of the JavaScript with this command:
+
+```shell
+$ yarn build
 ```
