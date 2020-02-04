@@ -31,7 +31,7 @@ setup(
     keywords="",
     author="RIDING BYTES & NARALABS",
     author_email="senaite@senaite.com",
-    url="https://github.com/senaite/senaite.core.supermodel",
+    url="https://github.com/senaite/senaite.core.spotlight",
     license="GPLv2",
     packages=find_packages("src", exclude=["ez_setup"]),
     package_dir={"": "src"},
