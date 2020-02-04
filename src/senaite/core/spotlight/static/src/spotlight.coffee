@@ -1,6 +1,6 @@
 import { Model, View, Collection } from "backbone"
-import "./spotlight.scss"
 import { template, debounce, each } from "underscore"
+import "./spotlight.scss"
 
 
 ###* DOCUMENT READY ENTRY POINT ###
