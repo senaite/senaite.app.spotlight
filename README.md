@@ -47,6 +47,7 @@ when calling it.
 The results dictionary has to provide at least a list of `items`, where each
 item is a dictionary containing this information:
 
+```python
     {
         "id": id,
         "title": title,
@@ -57,9 +58,11 @@ item is a dictionary containing this information:
         "parent_url": parent_url,
         "icon": icon,
     }
+```
 
 A simple implementation looks like this:
 
+```python
     dummy_item = {
         "id": "test",
         "title": "Test Item",
@@ -86,11 +89,14 @@ A simple implementation looks like this:
                 "count": len(items),
                 "items": items,
           }
+```
 
 And get registered like this:
 
+```xml
     <!-- A custom Spotlight Search Adapter -->
     <adapter
         for="*
             .interfaces.IMyBrowserLayer"
         factory=".adapters.MySpotlightSearchAdapter" />
+```
