@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from bika.lims import senaiteMessageFactory as _
 from plone.app.layout.viewlets.common import ViewletBase
 from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
-from senaite.lims import senaiteMessageFactory as _
 
 
 class SpotlightViewlet(ViewletBase):
@@ -13,7 +13,6 @@ class SpotlightViewlet(ViewletBase):
     def __init__(self, context, request, view, manager):
         super(SpotlightViewlet, self).__init__(context, request, view, manager)
         self.css_class = "spotlight-overlay"
-        self.placeholder = _("Spotlight Search ...")
 
     def update(self):
         pass

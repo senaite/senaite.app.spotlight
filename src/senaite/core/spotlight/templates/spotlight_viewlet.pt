@@ -11,10 +11,10 @@
                class="form-control input-lg"
                name="spotlight-search-field"
                type="text"
-               size="25"
-               placeholder="Search ..."
                value=""
-               tal:attributes="placeholder view/placeholder|nothing" >
+               placeholder="Search"
+               i18n:domain="senaite.core"
+               i18n:attributes="placeholder">
         <div class="input-group-btn">
           <button id="spotlight-clear-button" class="btn btn-default btn-lg" type="button">
             <i class="glyphicon glyphicon-remove"></i>
