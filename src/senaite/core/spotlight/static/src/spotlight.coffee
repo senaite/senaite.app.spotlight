@@ -101,7 +101,7 @@ class ResultView extends Backbone.View
 # Renders all search results
 class ResultsView extends Backbone.View
   tagName: "table"
-  className: "table"
+  className: "table results-table"
   id: "search-results"
 
   template: underscore.template $('#results-template').html()

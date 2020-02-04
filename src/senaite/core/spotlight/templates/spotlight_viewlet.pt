@@ -8,16 +8,15 @@
       <div class="input-group">
         <input id="spotlight-search-field"
                autocomplete="off"
-               class="form-control input-sm"
+               class="form-control input-lg"
                name="spotlight-search-field"
                type="text"
                size="25"
-               placeholder="Spotlight-Search ..."
+               placeholder="Search ..."
                value=""
-               i18n:attributes="placeholder"
                tal:attributes="placeholder view/placeholder|nothing" >
         <div class="input-group-btn">
-          <button id="spotlight-clear-button" class="btn btn-default btn-sm" type="button">
+          <button id="spotlight-clear-button" class="btn btn-default btn-lg" type="button">
             <i class="glyphicon glyphicon-remove"></i>
           </button>
         </div>
@@ -32,7 +31,7 @@
 
   <!-- Result Table Template -->
   <script type="text/template" id="results-template">
-    <table class="table table-condensed">
+    <table>
       <thead>
         <tr>
           <th></th>
@@ -66,6 +65,5 @@
 
   <!-- XXX: Refactor to JS registry -->
   <script type="text/javascript" src="++resource++senaite.core.spotlight.static/js/senaite.core.spotlight.js"></script>
-
 
 </div>

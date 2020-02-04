@@ -2,17 +2,13 @@
 
     #search-results {
         background-color: white;
-
+        border-radius: 6px;
         tr.selected,
         tr.odd.selected,
         tr.selected td,
         tr.odd.selected td {
             background-color: #fcf8e3;
         }
-        // td {
-            //     line-height: 2em;
-            //     padding: 0.5em 1em;
-            // }
     }
 }
 
