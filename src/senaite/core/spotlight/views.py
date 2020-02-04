@@ -3,12 +3,11 @@
 from bika.lims import senaiteMessageFactory as _
 from Products.Five.browser import BrowserView
 from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
+from senaite.core.spotlight.interfaces import ISpotlightSearchAdapter
 from senaite.core.spotlight.interfaces import ISpotlightView
 from senaite.jsonapi import add_route
-from zope.interface import implements
 from zope.component import getMultiAdapter
-
-from .interfaces import ISpotlightSearchAdapter
+from zope.interface import implements
 
 
 @add_route("/spotlight/search", "senaite.lims.spotlight", methods=["GET"])

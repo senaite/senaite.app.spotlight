@@ -9,7 +9,6 @@ from bika.lims.catalog import SETUP_CATALOG
 from plone.memoize import forever
 from senaite.core.spotlight.interfaces import ISpotlightSearchAdapter
 from zope.interface import implementer
-from zope.interface import implements
 
 CATALOGS = [
     "portal_catalog",
@@ -23,7 +22,6 @@ CATALOGS = [
 class SpotlightSearchAdapter(object):
     """Spotlight Search Adapter
     """
-    implements(ISpotlightSearchAdapter)
 
     def __init__(self, context, request):
         self.context = context
