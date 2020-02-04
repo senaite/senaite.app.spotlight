@@ -1,8 +1,10 @@
 include LICENSE
 include README.md
 exclude MANIFEST.in
+include *.rst
 recursive-include docs *
-recursive-include src/senaite/core/supermodel *
-recursive-exclude src/senaite/core/supermodel *.pyc
-recursive-exclude src/senaite/core/supermodel/tests *
-recursive-exclude src/senaite/core/supermodel/docs *
+recursive-include src/senaite/core/spotlight *
+recursive-exclude src/senaite/core/spotlight *.pyc
+recursive-exclude src/senaite/core/spotlight/tests *
+recursive-exclude src/senaite/core/spotlight/docs *
+recursive-exclude src/senaite/core/spotlight/static/src *
