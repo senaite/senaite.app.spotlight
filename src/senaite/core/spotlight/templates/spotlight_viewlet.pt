@@ -1,4 +1,6 @@
-<div id="spotlight" tal:attributes="class string:${view/css_class} pull-right">
+<div id="spotlight"
+     tal:attributes="class string:${view/css_class} pull-right;
+                     style string:${view/css_style}">
 
   <form id="spotlight-search-form"
         name="spotlight-searchform"

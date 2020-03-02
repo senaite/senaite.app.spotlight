@@ -30,6 +30,7 @@ class SpotlightViewlet(ViewletBase):
     def __init__(self, context, request, view, manager):
         super(SpotlightViewlet, self).__init__(context, request, view, manager)
         self.css_class = "spotlight-overlay"
+        self.css_style = "display:none;"
 
     def update(self):
         pass

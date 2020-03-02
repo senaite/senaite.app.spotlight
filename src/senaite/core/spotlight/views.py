@@ -49,6 +49,7 @@ class SpotlightView(BrowserView):
         self.context = context
         self.request = request
         self.css_class = "spotlight-view"
+        self.css_style = "display:block;"
         self.viewlet = self.viewlet()
 
     def __call__(self):
