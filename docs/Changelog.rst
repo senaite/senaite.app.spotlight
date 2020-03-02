@@ -1,6 +1,7 @@
 1.0.2 (2020-03-02)
 ------------------
 
+- #2 Fix visible spotlight viewlet on page load
 - #1 Added missing dependency to `senaite.jsonapi`
 
 
