@@ -1,31 +1,30 @@
 <div id="spotlight"
-     tal:attributes="class string:${view/css_class} pull-right;
+     tal:attributes="class string:${view/css_class};
                      style string:${view/css_style}">
 
   <form id="spotlight-search-form"
-        name="spotlight-searchform"
-        class="enableAutoFocus">
-
-    <fieldset id="search-field" class="noborder">
-      <div class="input-group">
+        name="spotlight-searchform">
+    <div id="search-field" class="row">
+      <div class="input-group col-sm-12">
         <input id="spotlight-search-field"
+               autofocus
                autocomplete="off"
-               class="form-control input-lg"
+               class="form-control form-control-lg"
                name="spotlight-search-field"
                type="text"
                value=""
                placeholder="Search"
                i18n:domain="senaite.core"
-               i18n:attributes="placeholder">
-        <div class="input-group-btn">
-          <button id="spotlight-clear-button" class="btn btn-default btn-lg" type="button">
-            <i class="glyphicon glyphicon-remove"></i>
+               i18n:attributes="placeholder"/>
+        <div class="input-group-append">
+          <button id="spotlight-clear-button" class="btn btn-secondary btn-lg" type="button">
+            <i class="fas fa-times"></i>
           </button>
         </div>
-    </fieldset>
-
+      </div>
+    </div>
     <div class="row">
-      <div id="search-results-wrapper" class="col-md-12"></div>
+      <div id="search-results-wrapper" class="col-sm-12"></div>
     </div>
   </form>
 
@@ -33,7 +32,7 @@
 
   <!-- Result Table Template -->
   <script type="text/template" id="results-template">
-    <table>
+    <table class=''>
       <thead>
         <tr>
           <th></th>
@@ -65,7 +64,6 @@
     </td>
   </script>
 
-  <!-- XXX: Refactor to JS registry -->
   <script type="text/javascript" src="++resource++senaite.core.spotlight.static/js/senaite.core.spotlight.js"></script>
 
 </div>

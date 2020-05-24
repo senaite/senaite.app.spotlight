@@ -102,7 +102,7 @@ class ResultView extends View
 # Renders all search results
 class ResultsView extends View
   tagName: "table"
-  className: "table results-table"
+  className: "table table-sm results-table"
   id: "search-results"
 
   template: template $('#results-template').html()

@@ -29,6 +29,7 @@
       manager="plone.app.layout.viewlets.interfaces.IPortalFooter"
       class=".viewlets.SpotlightViewlet"
       permission="zope2.View"
+      layer="senaite.core.interfaces.ISenaiteCore"
       />
 
   <!-- Register directory for static files-->
