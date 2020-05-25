@@ -35,7 +35,7 @@ CATALOGS = [
     CATALOG_WORKSHEET_LISTING,
 ]
 
-MAX_RESULTS = 10
+MAX_RESULTS = 12
 
 
 @implementer(ISpotlightSearchAdapter)
