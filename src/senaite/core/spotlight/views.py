@@ -27,7 +27,8 @@ from zope.component import getMultiAdapter
 from zope.interface import implements
 
 
-@add_route("/spotlight/search", "senaite.lims.spotlight", methods=["GET"])
+@add_route(
+    "/spotlight/search", "senaite.core.spotlight", methods=["GET", "POST"])
 def spotlight_search_route(context, request):
     """The spotlight search route
     """

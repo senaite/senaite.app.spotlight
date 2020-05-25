@@ -223,24 +223,84 @@ class SpotlightController extends View
     # The view notifies us when the user entered something in the search field
     @searchView.bind "query:changed", @lazySearch, @
 
+  get_csrf_token: () ->
+    ###
+     * Get the plone.protect CSRF token
+     * Note: The fields won't save w/o that token set
+    ###
+    return document.querySelector("#protect-script").dataset.token
+
+  get_portal_url: ->
+    ###
+     * Get the portal URL
+    ###
+    return document.body.dataset.portalUrl
+
+  get_api_url: (endpoint) ->
+    ###
+     * Build API URL for the given endpoint
+     * @param {string} endpoint
+     * @returns {string}
+    ###
+    url = @get_portal_url()
+    api_endpoint = "@@API/spotlight"
+    params = location.search
+    return "#{url}/#{api_endpoint}/#{endpoint}#{params}"
+
+  get_json: (url, options) ->
+    ###
+     * Fetch Ajax API resource from the server
+     * @param {string} endpoint
+     * @param {object} options
+     * @returns {Promise}
+    ###
+    options ?= {}
+
+    method = options.method or "POST"
+    data = JSON.stringify(options.data) or "{}"
+
+    init =
+      method: method
+      headers:
+        "Content-Type": "application/json"
+        "X-CSRF-TOKEN": @get_csrf_token()
+      body: if method is "POST" then data else null
+      credentials: "include"
+
+    request = new Request(url, init)
+    return fetch(request).then (response) ->
+      if response.status isnt 200
+        return response.json().then (json) ->
+          throw new Error(json.error or "Unknown Error")
+      else
+        return response.json()
+
   # Executest the search and adds the results to the collection
   search: (query) ->
     # reset the collection
     @searchResults.reset()
 
     # URL to query
-    url = "@@API/spotlight/search"
+    url = @get_api_url "search"
+    console.log url
 
     # prepare  the query
-    q = q: query, limit: 5
+    options =
+      data:
+        q: query
+        limit: 5
 
     me = this
+
     # execute the search
-    $.getJSON url, q, (data) ->
+    promise = @get_json(url, options)
+
+    promise.then (data) ->
+
       each data.items, (result, index) ->
         searchResult = new SearchResult(result)
         # add the new search result to the collection
         me.searchResults.add searchResult
-      , this
+
       # trigger finished event
       me.searchResults.trigger "results:changed"

@@ -18,7 +18,7 @@
 # Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
-from operator import itemgetter
+import json
 
 from bika.lims import api
 from bika.lims.catalog import CATALOG_ANALYSIS_REQUEST_LISTING
@@ -34,6 +34,8 @@ CATALOGS = [
     SETUP_CATALOG,
     CATALOG_WORKSHEET_LISTING,
 ]
+
+MAX_RESULTS = 10
 
 
 @implementer(ISpotlightSearchAdapter)
@@ -51,11 +53,11 @@ class SpotlightSearchAdapter(object):
             search_results.extend(search(catalog=catalog))
 
         # extract the data from all the brains
-        items = map(get_brain_info, search_results)
+        items = map(get_brain_info, search_results[:MAX_RESULTS])
 
         return {
             "count": len(items),
-            "items": sorted(items, key=itemgetter("title")),
+            "items": items,
         }
 
 
@@ -94,7 +96,8 @@ def search(query=None, catalog=None):
         query = make_query(catalog)
     if query is None:
         return []
-    return api.search(query, catalog=catalog)
+    results = api.search(query, catalog=catalog)
+    return results
 
 
 @forever.memoize
@@ -117,23 +120,30 @@ def make_query(catalog):
     """A function to prepare a query
     """
     query = {}
-    request = api.get_request()
     index = get_search_index_for(catalog)
-    limit = request.form.get("limit")
+    params = get_request_params()
 
-    q = request.form.get("q")
+    limit = params.get("limit", 5)
+
+    q = params.get("q")
     if len(q) > 0:
         query[index] = q + "*"
     else:
         return None
 
-    portal_type = request.form.get("portal_type")
+    portal_type = params.get("portal_type")
     if portal_type:
         if not isinstance(portal_type, list):
             portal_type = [portal_type]
         query["portal_type"] = portal_type
-
-    if limit and limit.isdigit():
         query["sort_limit"] = int(limit)
 
     return query
+
+
+def get_request_params():
+    request = api.get_request()
+    form = request.form
+    if not form:
+        form = json.loads(request.BODY)
+    return form
