@@ -3,12 +3,13 @@ const webpack = require("webpack");
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 module.exports = {
+  context: path.resolve(__dirname, "app"),
   entry: {
-    spotlight: path.resolve(__dirname, "./src/senaite/core/spotlight/static/src/spotlight.coffee")
+    spotlight: "./spotlight.coffee"
   },
   output: {
     filename: "senaite.core.[name].js",
-    path: path.resolve(__dirname, "./src/senaite/core/spotlight/static/js")
+    path: path.resolve(__dirname, "../src/senaite/core/spotlight/static/js")
   },
   module: {
     rules: [
@@ -35,9 +36,6 @@ module.exports = {
     // https://webpack.js.org/configuration/externals
     // use jQuery from the outer scope
     jquery: "jQuery",
-    bootstrap: "bootstrap",
-    jsi18n: {
-      root: "_"
-    }
+    bootstrap: "bootstrap"
   }
 };

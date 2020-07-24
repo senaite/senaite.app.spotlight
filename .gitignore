@@ -12,3 +12,7 @@ build
 *.pyc
 *.egg-info
 
+/.Python
+/include/
+/lib/
+/pyvenv.cfg
