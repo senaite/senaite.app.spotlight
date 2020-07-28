@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of SENAITE.CORE.SPOTLIGHT.
+# This file is part of SENAITE.APP.SPOTLIGHT.
 #
-# SENAITE.CORE.SPOTLIGHT is free software: you can redistribute it and/or
+# SENAITE.APP.SPOTLIGHT is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 2.
 #
@@ -18,19 +18,19 @@
 # Copyright 2018-2020 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
-from senaite.core.spotlight import logger
+from senaite.app.spotlight import logger
 
 
 def setup_handler(context):
     """Generic setup handler
     """
 
-    if context.readDataFile('senaite.core.spotlight.txt') is None:
+    if context.readDataFile('senaite.app.spotlight.txt') is None:
         return
 
-    logger.info("SENAITE.CORE.SPOTLIGHT setup handler [BEGIN]")
+    logger.info("SENAITE.APP.SPOTLIGHT setup handler [BEGIN]")
     portal = context.getSite()  # noqa
-    logger.info("SENAITE.CORE.SPOTLIGHT setup handler [DONE]")
+    logger.info("SENAITE.APP.SPOTLIGHT setup handler [DONE]")
 
 
 def post_install(portal_setup):
@@ -40,14 +40,14 @@ def post_install(portal_setup):
 
     :param portal_setup: SetupTool
     """
-    logger.info("SENAITE.CORE.SPOTLIGHT install handler [BEGIN]")
+    logger.info("SENAITE.APP.SPOTLIGHT install handler [BEGIN]")
 
     # https://docs.plone.org/develop/addons/components/genericsetup.html#custom-installer-code-setuphandlers-py
-    profile_id = "profile-senaite.core.spotlight:default"
+    profile_id = "profile-senaite.app.spotlight:default"
     context = portal_setup._getImportContext(profile_id)
     portal = context.getSite()  # noqa
 
-    logger.info("SENAITE.CORE.SPOTLIGHT install handler [DONE]")
+    logger.info("SENAITE.APP.SPOTLIGHT install handler [DONE]")
 
 
 def post_uninstall(portal_setup):
@@ -57,11 +57,11 @@ def post_uninstall(portal_setup):
 
     :param portal_setup: SetupTool
     """
-    logger.info("SENAITE.CORE.SPOTLIGHT uninstall handler [BEGIN]")
+    logger.info("SENAITE.APP.SPOTLIGHT uninstall handler [BEGIN]")
 
     # https://docs.plone.org/develop/addons/components/genericsetup.html#custom-installer-code-setuphandlers-py
-    profile_id = "profile-senaite.core.spotlight:uninstall"
+    profile_id = "profile-senaite.app.spotlight:uninstall"
     context = portal_setup._getImportContext(profile_id)
     portal = context.getSite()  # noqa
 
-    logger.info("SENAITE.CORE.SPOTLIGHT uninstall handler [DONE]")
+    logger.info("SENAITE.APP.SPOTLIGHT uninstall handler [DONE]")

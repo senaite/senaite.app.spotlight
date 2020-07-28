@@ -14,7 +14,7 @@ with open("docs/Changelog.rst", "r") as fh:
     long_description += fh.read()
 
 setup(
-    name="senaite.core.spotlight",
+    name="senaite.app.spotlight",
     version=version,
     description="MacOS like Spotlight search",
     long_description=long_description,
@@ -31,11 +31,11 @@ setup(
     keywords="",
     author="RIDING BYTES & NARALABS",
     author_email="senaite@senaite.com",
-    url="https://github.com/senaite/senaite.core.spotlight",
+    url="https://github.com/senaite/senaite.app.spotlight",
     license="GPLv2",
     packages=find_packages("src", exclude=["ez_setup"]),
     package_dir={"": "src"},
-    namespace_packages=["senaite", "senaite.core"],
+    namespace_packages=["senaite", "senaite.app"],
     include_package_data=True,
     zip_safe=False,
     install_requires=[

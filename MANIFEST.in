@@ -3,8 +3,8 @@ include README.md
 exclude MANIFEST.in
 include *.rst
 recursive-include docs *
-recursive-include src/senaite/core/spotlight *
-recursive-exclude src/senaite/core/spotlight *.pyc
-recursive-exclude src/senaite/core/spotlight/tests *
-recursive-exclude src/senaite/core/spotlight/docs *
-recursive-exclude src/senaite/core/spotlight/static/src *
+recursive-include src/senaite.app.spotlight *
+recursive-exclude src/senaite.app.spotlight *.pyc
+recursive-exclude src/senaite.app.spotlight/tests *
+recursive-exclude src/senaite.app.spotlight/docs *
+recursive-exclude src/senaite.app.spotlight/static/src *

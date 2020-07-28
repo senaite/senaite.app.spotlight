@@ -34,33 +34,33 @@
 
   <!-- Register directory for static files-->
   <browser:resourceDirectory
-      name="senaite.core.spotlight.static"
+      name="senaite.app.spotlight.static"
       directory="static"
       />
 
   <!-- Generic Setup *INSTALL* Profile -->
   <genericsetup:registerProfile
       name="default"
-      title="SENAITE CORE SPOTLIGHT"
+      title="SENAITE.APP.SPOTLIGHT"
       directory="profiles/default"
-      description="SENAITE CORE SPOTLIGHT"
-      post_handler="senaite.core.spotlight.setuphandlers.post_install"
+      description="SENAITE.APP.SPOTLIGHT"
+      post_handler="senaite.app.spotlight.setuphandlers.post_install"
       provides="Products.GenericSetup.interfaces.EXTENSION"/>
 
   <!-- Generic Setup *UNINSTALL* Profile -->
   <genericsetup:registerProfile
       name="uninstall"
-      title="SENAITE CORE SPOTLIGHT"
+      title="SENAITE.APP.SPOTLIGHT"
       directory="profiles/uninstall"
-      description="SENAITE CORE SPOTLIGHT"
-      post_handler="senaite.core.spotlight.setuphandlers.post_uninstall"
+      description="SENAITE.APP.SPOTLIGHT"
+      post_handler="senaite.app.spotlight.setuphandlers.post_uninstall"
       provides="Products.GenericSetup.interfaces.EXTENSION"/>
 
   <!-- Generic Setup *IMPORT STEP* -->
   <genericsetup:importStep
-      name="senaite.core.spotlight.setupHandler"
-      title="SENAITE CORE SPOTLIGHT: Run Setup Handler"
+      name="senaite.app.spotlight.setupHandler"
+      title="SENAITE.APP.SPOTLIGHT: Run Setup Handler"
       description="Run various configuration actions"
-      handler="senaite.core.spotlight.setuphandlers.setup_handler"/>
+      handler="senaite.app.spotlight.setuphandlers.setup_handler"/>
 
 </configure>

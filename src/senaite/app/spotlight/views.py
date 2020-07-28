@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of SENAITE.CORE.SPOTLIGHT.
+# This file is part of SENAITE.APP.SPOTLIGHT.
 #
-# SENAITE.CORE.SPOTLIGHT is free software: you can redistribute it and/or
+# SENAITE.APP.SPOTLIGHT is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 2.
 #
@@ -20,15 +20,15 @@
 
 from Products.Five.browser import BrowserView
 from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
-from senaite.core.spotlight.interfaces import ISpotlightSearchAdapter
-from senaite.core.spotlight.interfaces import ISpotlightView
+from senaite.app.spotlight.interfaces import ISpotlightSearchAdapter
+from senaite.app.spotlight.interfaces import ISpotlightView
 from senaite.jsonapi import add_route
 from zope.component import getMultiAdapter
 from zope.interface import implements
 
 
 @add_route(
-    "/spotlight/search", "senaite.core.spotlight", methods=["GET", "POST"])
+    "/spotlight/search", "senaite.app.spotlight", methods=["GET", "POST"])
 def spotlight_search_route(context, request):
     """The spotlight search route
     """

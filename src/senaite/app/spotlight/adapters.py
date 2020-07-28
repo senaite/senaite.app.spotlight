@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of SENAITE.CORE.SPOTLIGHT.
+# This file is part of SENAITE.APP.SPOTLIGHT.
 #
-# SENAITE.CORE.SPOTLIGHT is free software: you can redistribute it and/or
+# SENAITE.APP.SPOTLIGHT is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 2.
 #
@@ -25,7 +25,7 @@ from bika.lims.catalog import CATALOG_ANALYSIS_REQUEST_LISTING
 from bika.lims.catalog import CATALOG_WORKSHEET_LISTING
 from bika.lims.catalog import SETUP_CATALOG
 from plone.memoize import forever
-from senaite.core.spotlight.interfaces import ISpotlightSearchAdapter
+from senaite.app.spotlight.interfaces import ISpotlightSearchAdapter
 from zope.interface import implementer
 
 CATALOGS = [

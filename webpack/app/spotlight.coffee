@@ -5,7 +5,7 @@ import "./spotlight.scss"
 
 ###* DOCUMENT READY ENTRY POINT ###
 document.addEventListener "DOMContentLoaded", ->
-  console.debug "*** SENAITE.CORE.SPOTLIGHT::DOMContentLoaded: --> Loading Spotlight Controller"
+  console.debug "*** SENAITE.APP.SPOTLIGHT::DOMContentLoaded: --> Loading Spotlight Controller"
 
   window.app ?= {}
   window.app.spotlight = new Spotlight()

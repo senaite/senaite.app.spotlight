@@ -8,8 +8,8 @@ module.exports = {
     spotlight: "./spotlight.coffee"
   },
   output: {
-    filename: "senaite.core.[name].js",
-    path: path.resolve(__dirname, "../src/senaite/core/spotlight/static/js")
+    filename: "senaite.app.spotlight.js",
+    path: path.resolve(__dirname, "../src/senaite/app/spotlight/static/js")
   },
   module: {
     rules: [

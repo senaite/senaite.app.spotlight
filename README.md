@@ -1,20 +1,20 @@
 <div align="center">
 
-  <a href="https://github.com/senaite/senaite.core.spotlight">
-    <img src="static/logo.png" alt="senaite.core.spotlight" height="128" />
+  <a href="https://github.com/senaite/senaite.app.spotlight">
+    <img src="static/logo.png" alt="senaite.app.spotlight" height="128" />
   </a>
 
   <p>MacOS like Spotlight search for SENAITE</p>
 
   <div>
-    <a href="https://pypi.python.org/pypi/senaite.core.spotlight">
-      <img src="https://img.shields.io/pypi/v/senaite.core.spotlight.svg?style=flat-square" alt="pypi-version" />
+    <a href="https://pypi.python.org/pypi/senaite.app.spotlight">
+      <img src="https://img.shields.io/pypi/v/senaite.app.spotlight.svg?style=flat-square" alt="pypi-version" />
     </a>
-    <a href="https://github.com/senaite/senaite.core.spotlight/pulls">
-      <img src="https://img.shields.io/github/issues-pr/senaite/senaite.core.spotlight.svg?style=flat-square" alt="open PRs" />
+    <a href="https://github.com/senaite/senaite.app.spotlight/pulls">
+      <img src="https://img.shields.io/github/issues-pr/senaite/senaite.app.spotlight.svg?style=flat-square" alt="open PRs" />
     </a>
-    <a href="https://github.com/senaite/senaite.core.spotlight/issues">
-      <img src="https://img.shields.io/github/issues/senaite/senaite.core.spotlight.svg?style=flat-square" alt="open Issues" />
+    <a href="https://github.com/senaite/senaite.app.spotlight/issues">
+      <img src="https://img.shields.io/github/issues/senaite/senaite.app.spotlight.svg?style=flat-square" alt="open Issues" />
     </a>
     <a href="#">
       <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square" alt="pr" />
@@ -105,7 +105,7 @@ content type interface.
 
 ## Development
 
-The JavaScript code for `senaite.core.spotlight` is built via
+The JavaScript code for `senaite.app.spotlight` is built via
 [Webpack](https://webpack.js.org/). To setup the development environment, go to
 the root of this package install the required dependencies with `yarn`:
 
@@ -115,7 +115,7 @@ $ yarn install
 
 Note: You need to have `node` installed.
 
-The JavaScript code is located at `src/senaite/core/spotlight/static/src`.
+The JavaScript code is located at `src/senaite.app.spotlight/static/src`.
 
 After this, you can start watching for changes in the code files:
 
@@ -132,11 +132,11 @@ $ yarn build
 
 ## License
 
-**SENAITE.CORE.SPOTLIGHT** Copyright (C) 2019-2020 RIDING BYTES & NARALABS
+**SENAITE.APP.SPOTLIGHT** Copyright (C) 2019-2020 RIDING BYTES & NARALABS
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of the [GNU General Public License version
-2](https://github.com/senaite/senaite.core.spotlight/blob/master/LICENSE)
+2](https://github.com/senaite/senaite.app.spotlight/blob/master/LICENSE)
 as published by the Free Software Foundation.
 
 This program is distributed in the hope that it will be useful,
