@@ -4,6 +4,12 @@
 - Compatibility with `senaite.core` 2.x
 
 
+1.0.3 (2020-08-04)
+------------------
+
+- updated resources
+
+
 1.0.2 (2020-03-02)
 ------------------
 
