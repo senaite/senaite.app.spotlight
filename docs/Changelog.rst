@@ -1,4 +1,4 @@
-2.0.0rc2 (unreleased)
+2.0.0rc3 (unreleased)
 ---------------------
 
 - no changes yet
