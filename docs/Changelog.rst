@@ -1,7 +1,7 @@
 2.0.0 (unreleased)
 ------------------
 
-- no changes yet
+- #7 Use absolute portal URL for spotlight JS
 
 
 2.0.0rc3 (2021-01-04)
