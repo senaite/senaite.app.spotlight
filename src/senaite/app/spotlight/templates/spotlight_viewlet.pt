@@ -64,6 +64,11 @@
     </td>
   </script>
 
-  <script type="text/javascript" src="++resource++senaite.app.spotlight.static/js/senaite.app.spotlight.js"></script>
+  <script
+    src="#"
+    type="text/javascript"
+    tal:define="portal context/@@plone_portal_state/portal"
+    tal:attributes="src string:${portal/absolute_url}/++resource++senaite.app.spotlight.static/js/senaite.app.spotlight.js">
+  </script>
 
 </div>
