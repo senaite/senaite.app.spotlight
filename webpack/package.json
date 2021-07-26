@@ -1,6 +1,6 @@
 {
   "name": "senaite.app.spotlight",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "MacOS like Spotlight Search for SENAITE",
   "main": "senaite.app.spotlight.js",
   "scripts": {
