@@ -1,6 +1,8 @@
 2.0.1 (unreleased)
 ------------------
 
+- #25 Changed catalog imports for compatibility with senaite.core#1872
+
 
 
 2.0.0 (2021-07-26)
