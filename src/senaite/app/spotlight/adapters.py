@@ -21,18 +21,18 @@
 import json
 
 from bika.lims import api
-from bika.lims.catalog import CATALOG_ANALYSIS_REQUEST_LISTING
-from bika.lims.catalog import CATALOG_WORKSHEET_LISTING
-from bika.lims.catalog import SETUP_CATALOG
 from plone.memoize import forever
 from senaite.app.spotlight.interfaces import ISpotlightSearchAdapter
+from senaite.core.catalog import SAMPLE_CATALOG
+from senaite.core.catalog import SETUP_CATALOG
+from senaite.core.catalog import WORKSHEET_CATALOG
 from zope.interface import implementer
 
 CATALOGS = [
     "portal_catalog",
-    CATALOG_ANALYSIS_REQUEST_LISTING,
+    SAMPLE_CATALOG,
     SETUP_CATALOG,
-    CATALOG_WORKSHEET_LISTING,
+    WORKSHEET_CATALOG,
 ]
 
 MAX_RESULTS = 12
@@ -107,7 +107,7 @@ def get_search_index_for(catalog):
     searchable_text_index = "SearchableText"
     listing_searchable_text_index = "listing_searchable_text"
 
-    if catalog == CATALOG_ANALYSIS_REQUEST_LISTING:
+    if catalog == SAMPLE_CATALOG:
         tool = api.get_tool(catalog)
         indexes = tool.indexes()
         if listing_searchable_text_index in indexes:
