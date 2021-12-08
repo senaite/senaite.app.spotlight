@@ -2,7 +2,7 @@
 ------------------
 
 - #25 Changed catalog imports for compatibility with senaite.core#1872
-
+- Updated resources
 
 
 2.0.0 (2021-07-26)
