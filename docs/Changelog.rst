@@ -1,7 +1,7 @@
 2.2.0 (unreleased)
 ------------------
 
-- no changes yet
+- #26 Improve spotlight search results
 
 
 2.1.0 (2022-01-05)
