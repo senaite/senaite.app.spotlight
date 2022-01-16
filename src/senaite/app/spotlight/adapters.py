@@ -18,24 +18,34 @@
 # Copyright 2018-2021 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
+import re
 import json
 
 from bika.lims import api
-from plone.memoize import forever
+from Products.ZCTextIndex.ZCTextIndex import ZCTextIndex
+from senaite.app.spotlight import logger
 from senaite.app.spotlight.interfaces import ISpotlightSearchAdapter
 from senaite.core.catalog import SAMPLE_CATALOG
+from senaite.core.catalog import SENAITE_CATALOG
 from senaite.core.catalog import SETUP_CATALOG
 from senaite.core.catalog import WORKSHEET_CATALOG
 from zope.interface import implementer
 
 CATALOGS = [
-    "portal_catalog",
     SAMPLE_CATALOG,
     SETUP_CATALOG,
     WORKSHEET_CATALOG,
+    SENAITE_CATALOG,
+    "portal_catalog",
 ]
 
-MAX_RESULTS = 12
+SEARCHABLE_TEXT_INDEXES = [
+    "listing_searchable_text",
+    "SearchableText",
+    "Title",
+]
+
+MAX_RESULTS = 15
 
 
 @implementer(ISpotlightSearchAdapter)
@@ -51,6 +61,9 @@ class SpotlightSearchAdapter(object):
         search_results = []
         for catalog in CATALOGS:
             search_results.extend(search(catalog=catalog))
+            # break early when the max search results were found
+            if len(search_results) >= MAX_RESULTS:
+                break
 
         # extract the data from all the brains
         items = map(get_brain_info, search_results[:MAX_RESULTS])
@@ -94,26 +107,39 @@ def search(query=None, catalog=None):
     """
     if query is None:
         query = make_query(catalog)
+    # no query generated
     if query is None:
         return []
+    logger.info("Spotlight query=%r for catalog=%r" % (query, catalog))
     results = api.search(query, catalog=catalog)
     return results
 
 
-@forever.memoize
 def get_search_index_for(catalog):
     """Returns the search index to query
     """
-    searchable_text_index = "SearchableText"
-    listing_searchable_text_index = "listing_searchable_text"
+    search_index = None
+    tool = api.get_tool(catalog)
+    indexes = tool._catalog.indexes
+    searchable_text_indexes = []
 
-    if catalog == SAMPLE_CATALOG:
-        tool = api.get_tool(catalog)
-        indexes = tool.indexes()
-        if listing_searchable_text_index in indexes:
-            return listing_searchable_text_index
+    # gather all ZCTextIndexes from this catalog
+    for k, v in indexes.items():
+        if type(v) == ZCTextIndex:
+            searchable_text_indexes.append(k)
 
-    return searchable_text_index
+    # check if we have a prioritized catalog
+    for idx in SEARCHABLE_TEXT_INDEXES:
+        if idx in indexes:
+            search_index = idx
+            break
+
+    if search_index is not None:
+        return search_index
+    elif len(searchable_text_indexes) > 0:
+        return searchable_text_indexes[0]
+
+    return None
 
 
 def make_query(catalog):
@@ -123,11 +149,11 @@ def make_query(catalog):
     index = get_search_index_for(catalog)
     params = get_request_params()
 
-    limit = params.get("limit", 5)
+    limit = params.get("limit", MAX_RESULTS)
 
     q = params.get("q")
-    if len(q) > 0:
-        query[index] = q + "*"
+    if index and len(q) > 0:
+        query[index] = to_searchterm(q)
     else:
         return None
 
@@ -139,6 +165,16 @@ def make_query(catalog):
         query["sort_limit"] = int(limit)
 
     return query
+
+
+def to_searchterm(q):
+    """generate a wildcard searchterm
+    """
+    term = api.safe_unicode(q)
+    tokens = re.split(r"[^\w]", term, flags=re.U | re.I)
+    tokens = filter(None, tokens)
+    tokens = map(lambda t: t + "*", tokens)
+    return " AND ".join(tokens)
 
 
 def get_request_params():
