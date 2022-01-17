@@ -1,6 +1,7 @@
 2.2.0 (unreleased)
 ------------------
 
+- #27 Use searchable text index converter from catalog API
 - #26 Improve spotlight search results
 
 
