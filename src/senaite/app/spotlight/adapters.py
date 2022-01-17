@@ -18,13 +18,13 @@
 # Copyright 2018-2021 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
-import re
 import json
 
 from bika.lims import api
 from Products.ZCTextIndex.ZCTextIndex import ZCTextIndex
 from senaite.app.spotlight import logger
 from senaite.app.spotlight.interfaces import ISpotlightSearchAdapter
+from senaite.core.api.catalog import to_searchable_text_qs
 from senaite.core.catalog import SAMPLE_CATALOG
 from senaite.core.catalog import SENAITE_CATALOG
 from senaite.core.catalog import SETUP_CATALOG
@@ -153,7 +153,7 @@ def make_query(catalog):
 
     q = params.get("q")
     if index and len(q) > 0:
-        query[index] = to_searchterm(q)
+        query[index] = to_searchable_text_qs(q)
     else:
         return None
 
@@ -165,16 +165,6 @@ def make_query(catalog):
         query["sort_limit"] = int(limit)
 
     return query
-
-
-def to_searchterm(q):
-    """generate a wildcard searchterm
-    """
-    term = api.safe_unicode(q)
-    tokens = re.split(r"[^\w]", term, flags=re.U | re.I)
-    tokens = filter(None, tokens)
-    tokens = map(lambda t: t + "*", tokens)
-    return " AND ".join(tokens)
 
 
 def get_request_params():
