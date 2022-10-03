@@ -18,7 +18,7 @@
 # Copyright 2018-2022 by it's authors.
 # Some rights reserved, see README and LICENSE.
 
-from senaite.app.listing import logger
+from senaite.app.spotlight import logger
 
 PROFILE_ID = "profile-senaite.app.spotlight:default"
 
@@ -28,7 +28,6 @@ def to_2300(portal_setup):
 
     :param portal_setup: The portal_setup tool
     """
-
     logger.info("Run all import steps from SENAITE APP SPOTLIGHT ...")
     context = portal_setup._getImportContext(PROFILE_ID)
     portal = context.getSite()  # noqa
