@@ -25,7 +25,7 @@ def setup_handler(context):
     """Generic setup handler
     """
 
-    if context.readDataFile('senaite.app.spotlight.txt') is None:
+    if context.readDataFile("senaite.app.spotlight.txt") is None:
         return
 
     logger.info("SENAITE.APP.SPOTLIGHT setup handler [BEGIN]")
