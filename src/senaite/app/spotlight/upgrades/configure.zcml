@@ -5,6 +5,14 @@
 
   <genericsetup:upgradeStep
       title="Upgrade SENAITE APP SPOTLIGHT"
+      description="Version 2.4.0"
+      source="2300"
+      destination="2400"
+      handler="senaite.app.spotlight.upgrades.handlers.to_2400"
+      profile="senaite.app.spotlight:default" />
+
+  <genericsetup:upgradeStep
+      title="Upgrade SENAITE APP SPOTLIGHT"
       description="Version 2.3.0"
       source="*"
       destination="2300"
