@@ -8,6 +8,9 @@
 
   <five:registerPackage package="." initialize=".initialize"/>
 
+  <!-- package includes -->
+  <include package=".upgrades" />
+
   <!-- The default Spotlight Search Adapter -->
   <adapter
       for="*
