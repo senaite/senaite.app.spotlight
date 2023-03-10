@@ -132,7 +132,7 @@ $ yarn build
 
 ## License
 
-**SENAITE.APP.SPOTLIGHT** Copyright (C) 2019-2022 RIDING BYTES & NARALABS
+**SENAITE.APP.SPOTLIGHT** Copyright (C) RIDING BYTES & NARALABS
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of the [GNU General Public License version
