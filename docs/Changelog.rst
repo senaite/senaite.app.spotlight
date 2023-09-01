@@ -1,7 +1,7 @@
 2.4.0 (unreleased)
 ------------------
 
-- no changes yet
+- #30 Compatibility with core#2368 (Drop usage of portal_catalog tool)
 
 
 2.4.0 (2023-03-10)
