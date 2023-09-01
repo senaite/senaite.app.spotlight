@@ -25,6 +25,8 @@ from Products.ZCTextIndex.ZCTextIndex import ZCTextIndex
 from senaite.app.spotlight import logger
 from senaite.app.spotlight.interfaces import ISpotlightSearchAdapter
 from senaite.core.api.catalog import to_searchable_text_qs
+from senaite.core.catalog import CLIENT_CATALOG
+from senaite.core.catalog import CONTACT_CATALOG
 from senaite.core.catalog import SAMPLE_CATALOG
 from senaite.core.catalog import SENAITE_CATALOG
 from senaite.core.catalog import SETUP_CATALOG
@@ -36,6 +38,8 @@ CATALOGS = [
     SETUP_CATALOG,
     WORKSHEET_CATALOG,
     SENAITE_CATALOG,
+    CLIENT_CATALOG,
+    CONTACT_CATALOG,
     "portal_catalog",
 ]
 
