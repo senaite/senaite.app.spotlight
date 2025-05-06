@@ -27,9 +27,12 @@ from senaite.app.spotlight.interfaces import ISpotlightSearchAdapter
 from senaite.core.api.catalog import to_searchable_text_qs
 from senaite.core.catalog import CLIENT_CATALOG
 from senaite.core.catalog import CONTACT_CATALOG
+from senaite.core.catalog import LABEL_CATALOG
+from senaite.core.catalog import REPORT_CATALOG
 from senaite.core.catalog import SAMPLE_CATALOG
 from senaite.core.catalog import SENAITE_CATALOG
 from senaite.core.catalog import SETUP_CATALOG
+from Missing import Missing
 from senaite.core.catalog import WORKSHEET_CATALOG
 from zope.interface import implementer
 
@@ -40,7 +43,10 @@ CATALOGS = [
     SENAITE_CATALOG,
     CLIENT_CATALOG,
     CONTACT_CATALOG,
+    REPORT_CATALOG,
+    LABEL_CATALOG,
     "portal_catalog",
+    "uid_catalog",
 ]
 
 SEARCHABLE_TEXT_INDEXES = [
@@ -49,7 +55,7 @@ SEARCHABLE_TEXT_INDEXES = [
     "Title",
 ]
 
-MAX_RESULTS = 15
+MAX_RESULTS = 25
 
 
 @implementer(ISpotlightSearchAdapter)
@@ -72,9 +78,15 @@ class SpotlightSearchAdapter(object):
         # extract the data from all the brains
         items = map(get_brain_info, search_results[:MAX_RESULTS])
 
+        # filter out all Missing.Values
+        items = [
+            {k: ("" if isinstance(v, Missing) else v) for k, v in item.items()}
+            for item in items
+        ]
+
         return {
             "count": len(items),
-            "items": items,
+            "items": sorted(items, key=lambda x: x.get("title")),
         }
 
 
