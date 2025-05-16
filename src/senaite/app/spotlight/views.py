@@ -48,8 +48,6 @@ class SpotlightView(BrowserView):
         request.set("disable_border", 1)
         self.context = context
         self.request = request
-        self.css_class = "spotlight-view"
-        self.css_style = "display:block;"
         self.viewlet = self.viewlet()
 
     def __call__(self):

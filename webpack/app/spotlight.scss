@@ -1,30 +1,8 @@
 #spotlight {
-
-    #search-results {
-        background-color: white;
-        // border-radius: 6px;
-        tr.selected,
-        tr.odd.selected,
-        tr.selected td,
-        tr.odd.selected td {
-            background-color: #fcf8e3;
-        }
+    table#search-results tr.selected {
+        background-color: rgba(0, 0, 0, .05);
     }
-}
-
-.spotlight-overlay {
-    /* initially overlay is hidden */
-    display: none;
-    width: 60%;
-    height: auto;
-    white-space: normal;
-    z-index: 99; /* overlays should be above everything */
-    overflow-y: auto;
-    overflow: hidden;
-
-    #search-field {
-        padding-bottom: 1em;
-        width: 60%;
-        margin: auto;
+    div#search-form {
+        padding: 1rem 1rem 0 1rem;
     }
 }

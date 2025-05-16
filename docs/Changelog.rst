@@ -1,7 +1,7 @@
 2.7.0 (unreleased)
 ------------------
 
-- no changes yet
+- #31 JQuery3 compatibility
 
 
 2.6.0 (2025-04-04)

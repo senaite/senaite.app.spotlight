@@ -13,7 +13,7 @@ module.exports = {
   mode: mode,
   context: path.resolve(__dirname, "app"),
   entry: {
-    spotlight: "./spotlight.coffee"
+    spotlight: "./spotlight.js"
   },
   output: {
     filename: "senaite.app.spotlight.js",
@@ -52,7 +52,7 @@ module.exports = {
             drop_console: true,
             passes: 2,
           },
-	      }
+        }
       }),
     ],
   },
