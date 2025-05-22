@@ -1,6 +1,7 @@
 2.7.0 (unreleased)
 ------------------
 
+- #32 Handle catalog search errors gracefully
 - #31 JQuery3 compatibility
 
 

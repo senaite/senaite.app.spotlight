@@ -46,7 +46,6 @@ CATALOGS = [
     REPORT_CATALOG,
     LABEL_CATALOG,
     "portal_catalog",
-    "uid_catalog",
 ]
 
 SEARCHABLE_TEXT_INDEXES = [
@@ -70,7 +69,13 @@ class SpotlightSearchAdapter(object):
     def __call__(self):
         search_results = []
         for catalog in CATALOGS:
-            search_results.extend(search(catalog=catalog))
+            try:
+                search_results.extend(search(catalog=catalog))
+            except Exception as exc:
+                logger.warning("Search  in catalog '%s' failed with error: %s",
+                               catalog, exc)
+                continue
+
             # break early when the max search results were found
             if len(search_results) >= MAX_RESULTS:
                 break
