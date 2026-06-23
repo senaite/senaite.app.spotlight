@@ -22,10 +22,6 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.coffee$/,
-        exclude: [/node_modules/],
-        use: ["babel-loader", "coffee-loader"]
-      }, {
         test: /\.(js|jsx)$/,
         exclude: [/node_modules/],
         use: ["babel-loader"]
@@ -64,6 +60,11 @@ module.exports = {
     // https://webpack.js.org/configuration/externals
     // use jQuery from the outer scope
     jquery: "jQuery",
-    bootstrap: "bootstrap"
+    bootstrap: "bootstrap",
+    // Consume the shared React instance exposed by senaite.core on the global
+    // scope instead of bundling our own copy (see senaite.core.js).
+    react: "React",
+    "react-dom": "ReactDOM",
+    "react-dom/client": "ReactDOM"
   }
 };
