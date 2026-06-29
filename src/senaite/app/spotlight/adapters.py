@@ -19,178 +19,426 @@
 # Some rights reserved, see README and LICENSE.
 
 import json
+import re
 
 from bika.lims import api
+from bika.lims.api import APIError
+from Missing import Missing
+from Products.ZCatalog.Catalog import CatalogError
+from Products.ZCTextIndex.ParseTree import ParseError
 from Products.ZCTextIndex.ZCTextIndex import ZCTextIndex
 from senaite.app.spotlight import logger
+from senaite.app.spotlight.controlpanel import get_catalogs
+from senaite.app.spotlight.controlpanel import get_config
 from senaite.app.spotlight.interfaces import ISpotlightSearchAdapter
 from senaite.core.api.catalog import to_searchable_text_qs
-from senaite.core.catalog import CLIENT_CATALOG
-from senaite.core.catalog import CONTACT_CATALOG
-from senaite.core.catalog import LABEL_CATALOG
-from senaite.core.catalog import REPORT_CATALOG
-from senaite.core.catalog import SAMPLE_CATALOG
-from senaite.core.catalog import SENAITE_CATALOG
-from senaite.core.catalog import SETUP_CATALOG
-from Missing import Missing
-from senaite.core.catalog import WORKSHEET_CATALOG
 from zope.interface import implementer
 
-CATALOGS = [
-    SAMPLE_CATALOG,
-    SETUP_CATALOG,
-    WORKSHEET_CATALOG,
-    SENAITE_CATALOG,
-    CLIENT_CATALOG,
-    CONTACT_CATALOG,
-    REPORT_CATALOG,
-    LABEL_CATALOG,
-    "portal_catalog",
-]
-
+# Order of preferred searchable text indexes to query per catalog.
 SEARCHABLE_TEXT_INDEXES = [
     "listing_searchable_text",
     "SearchableText",
     "Title",
 ]
 
-MAX_RESULTS = 25
+# Hard cap to protect the server, regardless of the configured value.
+MAX_RESULTS = 50
+
+# Maximum number of brains scored per catalog when ranking by relevance. This
+# bounds the (cheap, metadata-only) scoring work; matches beyond this cap are
+# not considered for ranking.
+CANDIDATE_LIMIT = 100
 
 
 @implementer(ISpotlightSearchAdapter)
 class SpotlightSearchAdapter(object):
     """Spotlight Search Adapter
+
+    Performs a configuration driven search across the catalogs registered in
+    the spotlight control panel. The query may carry a prefix token (e.g.
+    "s:water") to scope the search to a single catalog.
     """
 
     def __init__(self, context, request):
         self.context = context
         self.request = request
+        self._config = None
+
+    @property
+    def config(self):
+        if self._config is None:
+            self._config = get_config()
+        return self._config
 
     def __call__(self):
-        search_results = []
-        for catalog in CATALOGS:
-            try:
-                search_results.extend(search(catalog=catalog))
-            except Exception as exc:
-                logger.warning("Search  in catalog '%s' failed with error: %s",
-                               catalog, exc)
-                continue
+        params = get_request_params()
+        # strip the "is:<state>" token first, so it is not mistaken for a
+        # catalog prefix (e.g. "is:" would look like the "is" prefix)
+        term, state = split_state(params.get("q", ""))
+        term, prefix = split_prefix(term)
+        # an explicit state request parameter takes precedence
+        state = params.get("state") or state
 
-            # break early when the max search results were found
-            if len(search_results) >= MAX_RESULTS:
-                break
+        limit = min(api.to_int(params.get("limit"), self.max_results),
+                    MAX_RESULTS)
+        catalogs, scoped = self.resolve_catalogs(
+            prefix, params.get("catalog"))
 
-        # extract the data from all the brains
-        items = map(get_brain_info, search_results[:MAX_RESULTS])
+        # nothing to search for, unless browsing a single scoped catalog (an
+        # empty term while scoped lists the first results of that catalog)
+        if not term and not scoped:
+            return {"count": 0, "items": []}
 
-        # filter out all Missing.Values
+        # collect candidate brains from all catalogs WITHOUT waking objects
+        candidates = []
+        for catalog in catalogs:
+            brains = search_brains(catalog, term, CANDIDATE_LIMIT, state)
+            for brain in brains[:CANDIDATE_LIMIT]:
+                candidates.append((brain, catalog))
+
+        # rank by relevance for a real term (cheap metadata only); for browse
+        # keep the catalog's own title-sorted order
+        ranked = rank_candidates(candidates, term) if term else candidates
         items = [
-            {k: ("" if isinstance(v, Missing) else v) for k, v in item.items()}
-            for item in items
+            sanitize_item(get_brain_info(brain, catalog))
+            for brain, catalog in ranked[:limit]
         ]
 
-        return {
-            "count": len(items),
-            "items": sorted(items, key=lambda x: x.get("title")),
-        }
+        return {"count": len(items), "items": items}
+
+    @property
+    def max_results(self):
+        return api.to_int(self.config.get("max_results"), MAX_RESULTS)
+
+    def resolve_catalogs(self, prefix=None, catalog=None):
+        """Return (catalogs, scoped) for the query
+
+        `scoped` is True when the search is narrowed to an explicit catalog or
+        a matching prefix; this enables the "browse first results" mode for an
+        empty term.
+        """
+        catalogs = get_catalogs()
+        if catalog:
+            return [c for c in catalogs if c.get("name") == catalog], True
+        if prefix:
+            scoped = [c for c in catalogs if c.get("prefix") == prefix]
+            if scoped:
+                return scoped, True
+        return catalogs, False
 
 
-def get_brain_info(brain):
-    """Extract the brain info
+def search_brains(catalog, term, limit, state=None):
+    """Search a single catalog record and return the matching brains
+
+    Catalog errors are logged and swallowed so a misconfigured catalog does
+    not break the whole search.
     """
-    icon = api.get_icon(brain)
-    # avoid 404 errors with these guys
-    if "document_icon.gif" in icon:
-        icon = ""
-
-    id = api.get_id(brain)
-    url = api.get_url(brain)
-    title = api.get_title(brain)
-    description = api.get_description(brain)
-    parent = api.get_parent(brain)
-    parent_title = api.get_title(parent)
-    parent_url = api.get_url(parent)
-
-    return {
-        "id": id,
-        "title": title,
-        "title_or_id": title or id,
-        "description": description,
-        "url": url,
-        "parent_title": parent_title,
-        "parent_url": parent_url,
-        "icon": icon,
-    }
-
-
-def search(query=None, catalog=None):
-    """Search
-    """
-    if query is None:
-        query = make_query(catalog)
-    # no query generated
-    if query is None:
+    name = catalog.get("name")
+    try:
+        query = make_query(catalog, term, limit, state)
+        if query is None:
+            return []
+        return api.search(query, catalog=name)
+    except (APIError, ParseError, CatalogError, KeyError) as exc:
+        logger.warning("Search in catalog '%s' failed: %s", name, exc)
         return []
-    logger.info("Spotlight query=%r for catalog=%r" % (query, catalog))
-    results = api.search(query, catalog=catalog)
-    return results
 
 
-def get_search_index_for(catalog):
-    """Returns the search index to query
+def get_metadata(brain, attr):
+    """Read brain metadata as lowercased unicode without waking the object
     """
-    search_index = None
-    tool = api.get_tool(catalog)
-    indexes = tool._catalog.indexes
-    searchable_text_indexes = []
+    value = getattr(brain, attr, None)
+    if not value or isinstance(value, Missing):
+        return u""
+    return api.safe_unicode(value).lower()
 
-    # gather all ZCTextIndexes from this catalog
-    for k, v in indexes.items():
-        if type(v) == ZCTextIndex:
-            searchable_text_indexes.append(k)
 
-    # check if we have a prioritized catalog
+def length_bonus(value):
+    """Small bonus (0..10) that favors shorter, closer matches
+    """
+    return max(0.0, 10.0 - 0.1 * len(value))
+
+
+def field_score(value, term, tokens):
+    """Score a single metadata value against the search term
+
+    Higher is better: exact > prefix > substring (earlier is better) > all
+    tokens present > some tokens present.
+    """
+    if not value or not term:
+        return 0.0
+    if value == term:
+        return 100.0
+    if value.startswith(term):
+        return 90.0 + length_bonus(value)
+    position = value.find(term)
+    if position >= 0:
+        return 70.0 - min(position, 20) + length_bonus(value)
+    if tokens and all(token in value for token in tokens):
+        return 50.0 + length_bonus(value)
+    hits = sum(1 for token in tokens if token in value)
+    if hits:
+        return 20.0 * hits / len(tokens)
+    return 0.0
+
+
+def relevance_score(brain, term, tokens):
+    """Relevance of a brain to the term using cheap metadata only
+
+    The id is weighted slightly higher than the title, since spotlight is
+    mostly used to find objects by their id (e.g. barcodes).
+    """
+    id_score = field_score(get_metadata(brain, "getId"), term, tokens)
+    title_score = field_score(get_metadata(brain, "Title"), term, tokens)
+    return max(id_score, 0.97 * title_score)
+
+
+def rank_by_relevance(items, term, get_brain):
+    """Sort items by relevance of their brain to the term (metadata only)
+
+    Ties are broken by sortable_title for a stable, predictable order. No
+    objects are woken up. `get_brain` extracts the brain from an item.
+    """
+    term = api.safe_unicode(term).lower()
+    tokens = [token for token in term.split() if token]
+
+    def sort_key(item):
+        brain = get_brain(item)
+        return (-relevance_score(brain, term, tokens),
+                get_metadata(brain, "sortable_title"))
+
+    return sorted(items, key=sort_key)
+
+
+def rank_candidates(candidates, term):
+    """Sort (brain, catalog) tuples by relevance to the term
+    """
+    return rank_by_relevance(candidates, term, lambda item: item[0])
+
+
+def rank_brains(brains, term):
+    """Sort a flat list of brains by relevance to the term
+    """
+    return rank_by_relevance(brains, term, lambda brain: brain)
+
+
+def split_state(query):
+    """Split a query into (term, state)
+
+    A state filter is expressed with an "is:<state>" token anywhere in the
+    query, e.g. "CA20 is:received" -> the state is "received" and the term is
+    "CA20". Queries without the token return an empty state.
+    """
+    query = (query or "").strip()
+    match = re.search(r"(?:^|\s)is:(\S+)", query, re.IGNORECASE)
+    if not match:
+        return query, None
+    state = match.group(1)
+    term = re.sub(r"(?:^|\s)is:\S+", " ", query, flags=re.IGNORECASE)
+    term = re.sub(r"\s+", " ", term).strip()
+    return term, state
+
+
+def is_sublist(needle, haystack):
+    """Check if `needle` occurs as a contiguous sublist of `haystack`
+    """
+    size = len(needle)
+    if size == 0:
+        return False
+    return any(haystack[i:i + size] == needle
+               for i in range(len(haystack) - size + 1))
+
+
+def resolve_review_states(indexes, token):
+    """Resolve a state token to the matching review_state index values
+
+    Matches the token against the distinct `review_state` values present in
+    the catalog on whole underscore-delimited segments (so "received" matches
+    "sample_received" and "verified" matches both "verified" and
+    "to_be_verified", but "active" does NOT match "inactive"). Spaces in the
+    token are treated as underscores, so "to be verified" matches
+    "to_be_verified".
+    """
+    index = indexes.get("review_state")
+    if index is None:
+        return []
+    needle = [s for s in api.safe_unicode(token).lower().replace(
+        " ", "_").split("_") if s]
+    matched = []
+    for value in index.uniqueValues():
+        segments = api.safe_unicode(value).lower().split("_")
+        if is_sublist(needle, segments):
+            matched.append(value)
+    return matched
+
+
+def split_prefix(query):
+    """Split a query into (term, prefix)
+
+    A prefix is a short token followed by a colon, e.g. "s:water" -> the prefix
+    is "s" and the term is "water". Queries without a colon return an empty
+    prefix.
+    """
+    query = (query or "").strip()
+    if ":" not in query:
+        return query, None
+    prefix, _, term = query.partition(":")
+    prefix = prefix.strip()
+    # only treat short alphanumeric tokens as a prefix
+    if prefix.isalnum() and len(prefix) <= 3:
+        return term.strip(), prefix
+    return query, None
+
+
+def get_search_index_for(indexes, override=None):
+    """Returns the searchable text index to query from the given indexes
+
+    :param indexes: the catalog `_catalog.indexes` mapping
+    :param override: optional index name to use if present in the catalog
+    """
+    # honor an explicit index override from the configuration
+    if override and override in indexes:
+        return override
+
+    # check if we have a prioritized index
     for idx in SEARCHABLE_TEXT_INDEXES:
         if idx in indexes:
-            search_index = idx
-            break
+            return idx
 
-    if search_index is not None:
-        return search_index
-    elif len(searchable_text_indexes) > 0:
-        return searchable_text_indexes[0]
+    # fall back to the first ZCTextIndex found
+    for key, index in indexes.items():
+        if isinstance(index, ZCTextIndex):
+            return key
 
     return None
 
 
-def make_query(catalog):
-    """A function to prepare a query
+def sanitize_term(term):
+    """Neutralize ZCTextIndex query operators in the search term
+
+    ZCTextIndex treats "-" as a negation operator, so a term like "WS-001"
+    becomes "WS AND NOT 001" and collapses the search. We replace the hyphen
+    with a space so the term is tokenized into separate words instead, e.g.
+    "WS-001" -> "WS 001".
     """
+    return term.replace("-", " ")
+
+
+def is_sortable_index(index):
+    """Check if the given catalog index can be used as a sort index
+    """
+    return index is not None and hasattr(index, "documentToKeyMap")
+
+
+def make_query(catalog, term, limit, state=None):
+    """Prepare a catalog query from a catalog config record and search term
+    """
+    name = catalog.get("name")
+    tool = api.get_tool(name, default=None)
+    if tool is None:
+        logger.warning("Spotlight: unknown catalog '%s'", name)
+        return None
+    indexes = tool._catalog.indexes
+
     query = {}
-    index = get_search_index_for(catalog)
-    params = get_request_params()
-
-    limit = params.get("limit", MAX_RESULTS)
-
-    q = params.get("q")
-    if index and len(q) > 0:
-        query[index] = to_searchable_text_qs(q)
+    # text search; an empty term means "browse" (list the first results)
+    if term:
+        index = get_search_index_for(indexes, catalog.get("index"))
+        if not index:
+            return None
+        query[index] = to_searchable_text_qs(sanitize_term(term))
+    elif "path" in indexes:
+        # browse: query a real index (everything under the portal) so the
+        # catalog reliably returns items, instead of relying on the behavior
+        # of a query that has only sort parameters
+        query["path"] = api.get_path(api.get_portal())
     else:
+        # no way to match all without a real index query
         return None
 
-    portal_type = params.get("portal_type")
-    if portal_type:
-        if not isinstance(portal_type, list):
-            portal_type = [portal_type]
-        query["portal_type"] = portal_type
-        query["sort_limit"] = int(limit)
+    # filter by workflow state (e.g. "is:received"). If the catalog has no
+    # matching state, skip it entirely so the result set stays accurate.
+    if state:
+        review_states = resolve_review_states(indexes, state)
+        if not review_states:
+            return None
+        query["review_state"] = review_states
 
+    portal_types = catalog.get("portal_types")
+    if portal_types:
+        if not isinstance(portal_types, list):
+            portal_types = [portal_types]
+        query["portal_type"] = portal_types
+
+    # only sort on a configured index that exists in this catalog AND is
+    # capable of sorting (has a `documentToKeyMap`, e.g. a FieldIndex),
+    # otherwise ZCatalog raises a CatalogError
+    sort_on = catalog.get("sort_on")
+    if sort_on and is_sortable_index(indexes.get(sort_on)):
+        query["sort_on"] = sort_on
+        query["sort_order"] = catalog.get("sort_order", "ascending")
+    elif sort_on:
+        logger.warning("Ignoring invalid sort index '%s' for catalog '%s'",
+                       sort_on, name)
+    elif not term and is_sortable_index(indexes.get("sortable_title")):
+        # browse: default to alphabetical order for stable first results
+        query["sort_on"] = "sortable_title"
+
+    query["sort_limit"] = int(limit)
     return query
 
 
+def get_brain_info(brain, catalog=None):
+    """Extract the relevant info from a catalog brain
+    """
+    icon = api.get_icon(brain)
+    # avoid 404 errors with the default document icon
+    if "document_icon.gif" in icon:
+        icon = ""
+
+    parent = api.get_parent(brain)
+
+    # secondary identifier to disambiguate same-named results (e.g. clients
+    # sharing a name). Read from brain metadata when available (no wakeup).
+    secondary_id = getattr(brain, "getClientID", None)
+    if isinstance(secondary_id, Missing):
+        secondary_id = None
+
+    return {
+        "id": api.get_id(brain),
+        "uid": api.get_uid(brain),
+        "title": api.get_title(brain),
+        "title_or_id": api.get_title(brain) or api.get_id(brain),
+        "description": api.get_description(brain),
+        "url": api.get_url(brain),
+        "portal_type": api.get_portal_type(brain),
+        "review_state": api.get_review_status(brain),
+        "parent_title": api.get_title(parent),
+        "parent_url": api.get_url(parent),
+        "secondary_id": secondary_id or "",
+        "icon": icon,
+        "catalog": catalog.get("name") if catalog else "",
+        "catalog_label": catalog.get("label", "") if catalog else "",
+    }
+
+
+def sanitize_item(item):
+    """Replace Missing.Value with empty strings for JSON serialization
+    """
+    return {
+        key: ("" if isinstance(value, Missing) else value)
+        for key, value in item.items()
+    }
+
+
 def get_request_params():
+    """Return the request parameters from the form or the request body
+    """
     request = api.get_request()
     form = request.form
     if not form:
-        form = json.loads(request.BODY)
+        try:
+            form = json.loads(request.BODY)
+        except (ValueError, TypeError):
+            form = {}
     return form

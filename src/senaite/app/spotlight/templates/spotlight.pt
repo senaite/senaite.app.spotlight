@@ -5,35 +5,29 @@
       metal:use-macro="here/main_template/macros/master"
       i18n:domain="senaite.core">
   <body>
-    <metal:title fill-slot="content-title">
-    </metal:title>
+    <metal:title fill-slot="content-title"></metal:title>
     <metal:content fill-slot="content">
-      <div id="spotlight">
-        <form id="spotlight-search-form" name="spotlight-searchform">
-          <div class="form-group">
-            <div class="input-group input-group-lg">
-              <input id="spotlight-search-field"
-                     autofocus
-                     autocomplete="off"
-                     class="form-control"
-                     name="spotlight-search-field"
-                     type="text"
-                     value=""
-                     placeholder="Search"
-                     i18n:domain="senaite.core"
-                     i18n:attributes="placeholder" />
-              <div class="input-group-append">
-                <button id="spotlight-clear-button"
-                        class="btn btn-secondary"
-                        type="button">
-                  <i class="fas fa-times"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </form>
-        <div id="search-results-wrapper"></div>
+      <div class="text-center text-muted p-5" i18n:translate="">
+        Opening spotlight search ...
       </div>
+      <!-- The overlay itself is rendered by the spotlight viewlet. Here we
+           only trigger it once the bundle has registered the global API. -->
+      <script type="text/javascript">
+      /* <![CDATA[ */
+        (function () {
+          var tries = 0;
+          var timer = window.setInterval(function () {
+            tries += 1;
+            if (window.senaite && window.senaite.spotlight) {
+              window.clearInterval(timer);
+              window.senaite.spotlight.open();
+            } else if (tries > 50) {
+              window.clearInterval(timer);
+            }
+          }, 100);
+        })();
+      /* ]]> */
+      </script>
     </metal:content>
   </body>
 </html>

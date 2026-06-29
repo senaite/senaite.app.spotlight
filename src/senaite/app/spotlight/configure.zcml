@@ -25,6 +25,25 @@
       permission="zope2.View"
       />
 
+  <!-- Spotlight control panel -->
+  <browser:page
+      name="spotlight-controlpanel"
+      for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+      class=".controlpanel.SpotlightControlPanelView"
+      permission="senaite.core.permissions.ManageBika"
+      layer="senaite.core.interfaces.ISenaiteCore"
+      />
+
+  <!-- Standalone full page search (listing based).
+       NOTE: do not use the name "search", it is reserved by Plone. -->
+  <browser:page
+      for="*"
+      name="spotlight-search"
+      class=".search.SearchView"
+      permission="zope2.View"
+      layer="senaite.core.interfaces.ISenaiteCore"
+      />
+
   <!-- The Spotlight Viewlet will render on all pages and will be displayed within an overlay -->
   <browser:viewlet
       for="*"

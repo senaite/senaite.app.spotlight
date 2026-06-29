@@ -28,9 +28,75 @@
 
 ## About
 
-Quickly find contents in SENAITE by pressing `Ctrl-Space` and start typing.
+Quickly find contents in SENAITE by pressing the configured hotkey
+(`Ctrl-Space` by default) and start typing.
+
+The spotlight is a React component that consumes the shared React instance
+exposed by `senaite.core`. It searches the configured catalogs on the server
+and narrows, sorts and highlights the results on the client. A command palette
+allows navigating to or triggering registered actions directly.
 
 See the screencast how to use it: https://www.youtube.com/watch?v=AIA5atToc-c
+
+
+## Search syntax
+
+The search term supports a few inline tokens:
+
+- `/` opens the command palette and lists all available commands. Type after
+  the slash to filter them, e.g. `/add`.
+- `<prefix>:<term>` scopes the search to a single catalog, e.g. `s:water`
+  searches only the catalog whose prefix is `s` (see the Catalogs setting).
+- `is:<state>` filters by workflow state, e.g. `CA20 is:received` finds items
+  matching `CA20` that are in the `received` state. Typing `is:` opens an
+  autocomplete of the available states (scoped to the active catalog when a
+  prefix is used, otherwise the union of all catalogs). The state is matched
+  on whole, underscore-delimited segments of the catalog's review states (so
+  `received` matches `sample_received` and `verified` matches both `verified`
+  and `to_be_verified`, but `active` does not match `inactive`).
+
+Tokens can be combined, e.g. `s:CA20 is:received`. The same tokens also work in
+the search box of the standalone search page.
+
+
+## Configuration
+
+The spotlight has its own control panel at `@@spotlight-controlpanel`,
+reachable from the SENAITE control panel ("Spotlight Settings") and from the
+settings link inside the spotlight itself (shown to users with the
+`senaite.core: Manage Bika` permission). The following settings are available:
+
+- **Hotkey**: Keyboard shortcut to toggle the overlay, e.g. `Control+Space`,
+  `Meta+k` or `Control+Shift+f`.
+- **Maximum results** / **Minimum characters** / **Search debounce**: Tune the
+  search behavior.
+- **Highlight matches**: Highlight the matching parts of the search term.
+- **Catalogs**: A grid of the catalogs to search. Each row has a `catalog`,
+  `label`, optional `prefix` (scopes a search to a single catalog, e.g. typing
+  `s:water`), `portal_types`, `index`, `sort_on`, `sort_order` and `enabled`.
+- **Commands**: A grid of command palette actions. Each row has an `id`,
+  `title`, `icon`, `url` (may contain the `${portal_url}` placeholder), an
+  optional `permission` (the command is only shown to users holding it) and
+  `keywords`.
+
+The settings are stored in the registry under the `senaite.app.spotlight`
+prefix. Add-ons can contribute additional catalogs and commands by shipping
+their own `registry.xml` that appends to the list fields with `purge="false"`:
+
+```xml
+<registry>
+  <records interface="senaite.app.spotlight.controlpanel.ISpotlightControlPanel"
+           prefix="senaite.app.spotlight">
+    <value key="commands" purge="false">
+      <element>
+        <value key="command_id">my-action</value>
+        <value key="title">My Action</value>
+        <value key="url">${portal_url}/my-view</value>
+      </element>
+    </value>
+  </records>
+</registry>
+```
 
 
 ## Customizing the Search
@@ -115,7 +181,8 @@ $ yarn install
 
 Note: You need to have `node` installed.
 
-The JavaScript code is located at `src/senaite.app.spotlight/static/src`.
+The React source code is located at `webpack/app` and is built into
+`src/senaite/app/spotlight/static/js`.
 
 After this, you can start watching for changes in the code files:
 

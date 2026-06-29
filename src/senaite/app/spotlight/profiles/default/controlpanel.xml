@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<object
+    name="portal_controlpanel"
+    xmlns:i18n="http://xml.zope.org/namespaces/i18n">
+
+  <configlet
+      title="Spotlight Settings"
+      action_id="senaite.app.spotlight"
+      appId="senaite.app.spotlight"
+      category="Products"
+      condition_expr=""
+      icon_expr="string:++resource++senaite.app.spotlight.static/spotlight.svg"
+      url_expr="string:${portal_url}/@@spotlight-controlpanel"
+      visible="True"
+      i18n:domain="senaite.core"
+      i18n:attributes="title">
+    <permission>senaite.core: Manage Bika</permission>
+  </configlet>
+
+</object>

@@ -1,8 +1,544 @@
-#spotlight {
-    table#search-results tr.selected {
-        background-color: rgba(0, 0, 0, .05);
+/* SENAITE.APP.SPOTLIGHT
+ *
+ * A refined, modern command-palette overlay in the spirit of macOS Spotlight,
+ * Raycast and Linear: frosted depth, a confident entrance and crisp typography.
+ * Theming is driven by CSS custom properties with an automatic dark variant.
+ */
+
+:root {
+  --sl-bg: rgba(255, 255, 255, 0.86);
+  --sl-bg-solid: #ffffff;
+  --sl-fg: #1c1f23;
+  --sl-fg-muted: #6b7280;
+  --sl-fg-subtle: #9aa1ab;
+  --sl-border: rgba(20, 23, 28, 0.08);
+  --sl-hairline: rgba(20, 23, 28, 0.06);
+  --sl-accent: #2f6df6;
+  --sl-accent-soft: rgba(47, 109, 246, 0.1);
+  --sl-active: rgba(47, 109, 246, 0.1);
+  --sl-chip-bg: rgba(20, 23, 28, 0.04);
+  --sl-mark: rgba(255, 206, 51, 0.55);
+  --sl-keycap-bg: rgba(20, 23, 28, 0.05);
+  --sl-keycap-fg: #4b5563;
+  --sl-scrim: rgba(17, 21, 28, 0.32);
+  --sl-shadow: 0 24px 70px -12px rgba(12, 17, 28, 0.45),
+               0 6px 16px -8px rgba(12, 17, 28, 0.3);
+  --sl-radius: 16px;
+  --sl-radius-row: 10px;
+  --sl-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+             Arial, sans-serif;
+  --sl-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+             monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sl-bg: rgba(28, 31, 38, 0.82);
+    --sl-bg-solid: #1c1f26;
+    --sl-fg: #e8eaed;
+    --sl-fg-muted: #9aa1ac;
+    --sl-fg-subtle: #6b7280;
+    --sl-border: rgba(255, 255, 255, 0.1);
+    --sl-hairline: rgba(255, 255, 255, 0.07);
+    --sl-accent: #5b8bff;
+    --sl-accent-soft: rgba(91, 139, 255, 0.16);
+    --sl-active: rgba(91, 139, 255, 0.16);
+    --sl-chip-bg: rgba(255, 255, 255, 0.06);
+    --sl-mark: rgba(255, 206, 51, 0.32);
+    --sl-keycap-bg: rgba(255, 255, 255, 0.08);
+    --sl-keycap-fg: #c2c8d0;
+    --sl-scrim: rgba(0, 0, 0, 0.5);
+    --sl-shadow: 0 24px 80px -12px rgba(0, 0, 0, 0.7),
+                 0 6px 18px -8px rgba(0, 0, 0, 0.55);
+  }
+}
+
+@keyframes sl-scrim-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sl-panel-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes sl-row-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.spotlight-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2050;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 11vh 1rem 1rem;
+  background: var(--sl-scrim);
+  backdrop-filter: blur(6px) saturate(120%);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+  animation: sl-scrim-in 0.16s ease-out;
+}
+
+.spotlight-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 660px;
+  max-height: 72vh;
+  overflow: hidden;
+  color: var(--sl-fg);
+  font-family: var(--sl-font);
+  background: var(--sl-bg);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius);
+  box-shadow: var(--sl-shadow);
+  animation: sl-panel-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ----------------------------------------------------------------- search */
+
+.spotlight-search-field {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.95rem 1.15rem;
+  border-bottom: 1px solid var(--sl-hairline);
+
+  .spotlight-search-icon {
+    font-size: 1.05rem;
+    color: var(--sl-fg-subtle);
+  }
+
+  input.form-control,
+  input.form-control-lg {
+    flex: 1 1 auto;
+    height: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--sl-fg);
+    font-size: 1.3rem;
+    font-weight: 450;
+    letter-spacing: -0.01em;
+    box-shadow: none;
+
+    &::placeholder { color: var(--sl-fg-subtle); }
+    &:focus {
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      color: var(--sl-fg);
     }
-    div#search-form {
-        padding: 1rem 1rem 0 1rem;
+  }
+
+  .spotlight-clear-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    padding: 0;
+    border-radius: 50%;
+    color: var(--sl-fg-subtle);
+    transition: background 0.12s ease, color 0.12s ease;
+
+    &:hover {
+      background: var(--sl-chip-bg);
+      color: var(--sl-fg);
+      text-decoration: none;
     }
+  }
+}
+
+/* --------------------------------------------------------------- scope bar */
+
+.spotlight-scopebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 1.15rem;
+  border-bottom: 1px solid var(--sl-hairline);
+
+  .spotlight-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    min-width: 0;
+  }
+
+  .spotlight-chip.btn {
+    padding: 0.18rem 0.7rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: var(--sl-chip-bg);
+    color: var(--sl-fg-muted);
+    font-size: 0.78rem;
+    font-weight: 500;
+    line-height: 1.3;
+    transition: background 0.12s ease, color 0.12s ease,
+                box-shadow 0.12s ease;
+
+    &:hover {
+      color: var(--sl-fg);
+      box-shadow: none;
+    }
+
+    &.btn-primary {
+      background: var(--sl-accent);
+      border-color: var(--sl-accent);
+      color: #fff;
+    }
+  }
+
+  .spotlight-sort {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+
+    .spotlight-sort-label {
+      margin: 0;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--sl-fg-subtle);
+    }
+
+    select.custom-select {
+      width: auto;
+      height: auto;
+      padding: 0.15rem 1.4rem 0.15rem 0.5rem;
+      border: 1px solid var(--sl-border);
+      border-radius: 8px;
+      background-color: transparent;
+      color: var(--sl-fg);
+      font-size: 0.78rem;
+
+      &:focus {
+        border-color: var(--sl-accent);
+        box-shadow: 0 0 0 2px var(--sl-accent-soft);
+      }
+    }
+  }
+}
+
+/* ----------------------------------------------------------------- results */
+
+.spotlight-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 0.4rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sl-border) transparent;
+
+  &::-webkit-scrollbar { width: 8px; }
+  &::-webkit-scrollbar-thumb {
+    background: var(--sl-border);
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+}
+
+.spotlight-section + .spotlight-section { margin-top: 0.25rem; }
+
+.spotlight-section-title {
+  padding: 0.5rem 0.75rem 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--sl-fg-subtle);
+}
+
+.spotlight-result,
+.spotlight-command,
+.spotlight-state {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--sl-radius-row);
+  color: var(--sl-fg);
+  text-decoration: none;
+  animation: sl-row-in 0.18s ease-out both;
+  transition: background 0.1s ease;
+
+  &:hover { text-decoration: none; color: var(--sl-fg); }
+
+  &--active {
+    background: var(--sl-active);
+    box-shadow: inset 0 0 0 1px var(--sl-accent-soft);
+  }
+}
+
+.spotlight-state-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.92rem;
+  font-weight: 550;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spotlight-state-id {
+  flex: 0 0 auto;
+  font-family: var(--sl-mono);
+  font-size: 0.75rem;
+}
+
+.spotlight-result-icon,
+.spotlight-command-icon,
+.spotlight-state-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 2rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+  background: var(--sl-chip-bg);
+  color: var(--sl-fg-muted);
+  font-size: 0.85rem;
+
+  img { max-width: 18px; max-height: 18px; }
+}
+
+.spotlight-command--active .spotlight-command-icon,
+.spotlight-result--active .spotlight-result-icon,
+.spotlight-state--active .spotlight-state-icon {
+  background: var(--sl-accent-soft);
+  color: var(--sl-accent);
+}
+
+.spotlight-result-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.spotlight-result-title,
+.spotlight-command-title {
+  font-size: 0.92rem;
+  font-weight: 550;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spotlight-command-title { flex: 1 1 auto; min-width: 0; }
+
+.spotlight-result-code {
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 5px;
+  background: var(--sl-chip-bg);
+  color: var(--sl-fg-muted);
+  font-family: var(--sl-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.spotlight-result-description {
+  margin-top: 0.05rem;
+  font-size: 0.78rem;
+  color: var(--sl-fg-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spotlight-result-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+  max-width: 45%;
+}
+
+.spotlight-result-location {
+  font-size: 0.76rem;
+  color: var(--sl-fg-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spotlight-result-state.badge {
+  padding: 0.2rem 0.45rem;
+  border-radius: 6px;
+  background: var(--sl-chip-bg);
+  color: var(--sl-fg-muted);
+  font-weight: 500;
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  text-transform: capitalize;
+}
+
+.spotlight-command-badge.badge {
+  flex: 0 0 auto;
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
+  background: var(--sl-chip-bg);
+  color: var(--sl-fg-subtle);
+  font-weight: 500;
+}
+
+.spotlight-highlight {
+  padding: 0 0.05em;
+  border-radius: 3px;
+  background: var(--sl-mark);
+  color: inherit;
+}
+
+/* ------------------------------------------------------- empty / hint / err */
+
+.spotlight-empty,
+.spotlight-hint,
+.spotlight-error {
+  padding: 2.25rem 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--sl-fg-muted);
+}
+
+.spotlight-hint-title {
+  margin-bottom: 0.85rem;
+}
+
+.spotlight-hint-tips {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+  font-size: 0.82rem;
+
+  li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+
+  code {
+    flex: 0 0 auto;
+    min-width: 6.5rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 5px;
+    background: var(--sl-keycap-bg);
+    color: var(--sl-keycap-fg);
+    font-family: var(--sl-mono);
+    font-size: 0.76rem;
+  }
+}
+
+.spotlight-error { color: #e5484d; }
+
+/* ------------------------------------------------------------------ footer */
+
+.spotlight-footer {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  padding: 0.55rem 1.15rem;
+  border-top: 1px solid var(--sl-hairline);
+  font-size: 0.74rem;
+  color: var(--sl-fg-subtle);
+
+  kbd {
+    display: inline-block;
+    min-width: 1.4rem;
+    padding: 0.1rem 0.35rem;
+    margin-right: 0.15rem;
+    border-radius: 5px;
+    background: var(--sl-keycap-bg);
+    box-shadow: inset 0 -1px 0 var(--sl-border);
+    color: var(--sl-keycap-fg);
+    font-family: var(--sl-mono);
+    font-size: 0.7rem;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .spotlight-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin-left: auto;
+  }
+
+  .spotlight-settings,
+  .spotlight-advanced {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--sl-fg-muted);
+    text-decoration: none;
+    transition: color 0.12s ease;
+
+    &:hover {
+      color: var(--sl-accent);
+      text-decoration: none;
+    }
+  }
+
+  .spotlight-hotkey {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+
+    .spotlight-hotkey-set,
+    .spotlight-hotkey-reset {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--sl-fg-muted);
+      font-size: 0.74rem;
+      transition: color 0.12s ease;
+
+      &:hover { color: var(--sl-accent); }
+    }
+  }
+
+  .spotlight-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--sl-fg-muted);
+
+    &::before {
+      content: "";
+      width: 0.7rem;
+      height: 0.7rem;
+      border: 2px solid var(--sl-border);
+      border-top-color: var(--sl-accent);
+      border-radius: 50%;
+      animation: sl-spin 0.6s linear infinite;
+    }
+  }
+}
+
+@keyframes sl-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spotlight-overlay,
+  .spotlight-panel,
+  .spotlight-result,
+  .spotlight-command { animation: none; }
 }

@@ -20,6 +20,7 @@
 
 from Products.Five.browser import BrowserView
 from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
+from senaite.app.spotlight.commands import get_dynamic_commands
 from senaite.app.spotlight.interfaces import ISpotlightSearchAdapter
 from senaite.app.spotlight.interfaces import ISpotlightView
 from senaite.jsonapi import add_route
@@ -37,18 +38,25 @@ def spotlight_search_route(context, request):
     return search_adapter()
 
 
+@add_route("/spotlight/commands", "senaite.app.spotlight.commands",
+           methods=["GET", "POST"])
+def spotlight_commands_route(context, request):
+    """The spotlight dynamic commands route (lazily looked-up actions)
+    """
+    return {"commands": get_dynamic_commands()}
+
+
 class SpotlightView(BrowserView):
-    """The spotlight search view just renders the template
+    """The spotlight search view renders a standalone page that opens the
+    overlay provided by the spotlight viewlet
     """
     implements(ISpotlightView)
     template = ViewPageTemplateFile("templates/spotlight.pt")
-    viewlet = ViewPageTemplateFile("templates/spotlight_viewlet.pt")
 
     def __init__(self, context, request):
         request.set("disable_border", 1)
         self.context = context
         self.request = request
-        self.viewlet = self.viewlet()
 
     def __call__(self):
         return self.template()

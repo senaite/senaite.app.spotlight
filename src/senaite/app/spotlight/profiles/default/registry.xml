@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<registry xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+          i18n:domain="senaite.core">
+
+  <!-- Spotlight control panel settings. Add-ons may append catalogs and
+       commands by shipping their own registry.xml that targets the list
+       fields with purge="false". -->
+  <records
+      interface="senaite.app.spotlight.controlpanel.ISpotlightControlPanel"
+      prefix="senaite.app.spotlight" />
+
+</registry>
