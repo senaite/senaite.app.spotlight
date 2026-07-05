@@ -1,16 +1,7 @@
 2.7.0 (unreleased)
 ------------------
 
-- Auto-discover installed SENAITE catalogs into the search scope, so add-on
-  catalogs (e.g. senaite.storage) are searchable without manual configuration;
-  configured rows still win for labels, prefixes, ordering and disabling, and
-  the internal catalogs (analyses, audit log, import logs, attachments) ship as
-  disabled rows
-- Show every installed catalog in the control panel grid automatically
-  (discovered ones included), so any catalog can be labeled, prefixed or
-  disabled without typing a catalog id
-- Strip HTML markup from result descriptions so rich-text fields (e.g. a
-  storage facility address) render as plain text instead of raw tags
+- #34 Auto-discover installed SENAITE catalogs into the spotlight search
 - #33 Rewrite the spotlight search as a React component
 - Consume the shared React instance exposed by senaite.core (Webpack
   externals) instead of bundling a copy
