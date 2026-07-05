@@ -23,6 +23,8 @@ from bika.lims import senaiteMessageFactory as _
 from plone.app.registry.browser.controlpanel import ControlPanelFormWrapper
 from plone.app.registry.browser.controlpanel import RegistryEditForm
 from plone.autoform import directives
+from plone.registry.interfaces import IRegistry
+from plone.registry.recordsproxy import RecordsProxy
 from plone.supermodel import model
 from plone.z3cform import layout
 from senaite.core.interfaces.catalog import ISenaiteCatalogObject
@@ -31,6 +33,7 @@ from senaite.core.permissions import ManageBika
 from senaite.core.schema.registry import DataGridRow
 from senaite.core.z3cform.widgets.datagrid import DataGridWidgetFactory
 from zope import schema
+from zope.component import getUtility
 from zope.interface import Interface
 
 # Registry prefix under which the settings are stored.
@@ -314,10 +317,9 @@ class ISpotlightControlPanel(model.Schema):
     catalogs = schema.List(
         title=_(u"Catalogs"),
         description=_(
-            u"The catalogs to search. Installed SENAITE catalogs are "
-            u"discovered automatically and appended to this list; add a "
-            u"row here only to set a label or prefix, reorder, or "
-            u"disable a catalog."),
+            u"The catalogs to search. Every installed SENAITE catalog is "
+            u"listed here automatically; set a label or prefix, reorder, or "
+            u"uncheck Enabled to exclude one. Saving persists the list."),
         value_type=DataGridRow(title=u"Catalog", schema=ISpotlightCatalog),
         default=list(DEFAULT_CATALOGS),
         required=False,
@@ -360,10 +362,33 @@ class ISpotlightControlPanel(model.Schema):
     )
 
 
+class MergedCatalogsProxy(RecordsProxy):
+    """Registry proxy that lists every installed catalog in the grid.
+
+    Reading `catalogs` returns the stored rows plus a row for each
+    auto-discovered catalog not yet listed (see `merged_catalog_rows`),
+    so the control panel always shows all catalogs and any of them can be
+    toggled or labeled without typing an id. Every other attribute and
+    all writes behave like the base proxy, so saving persists the
+    submitted rows to the registry as usual.
+    """
+
+    def __getattr__(self, name):
+        if name == "catalogs":
+            return merged_catalog_rows()
+        return RecordsProxy.__getattr__(self, name)
+
+
 class SpotlightControlPanelForm(RegistryEditForm):
     schema = ISpotlightControlPanel
     schema_prefix = PREFIX
     label = _("SENAITE Spotlight Settings")
+
+    def getContent(self):
+        """Bind the form to a proxy that lists all catalogs in the grid
+        """
+        return MergedCatalogsProxy(
+            getUtility(IRegistry), self.schema, prefix=self.schema_prefix)
 
 
 SpotlightControlPanelView = layout.wrap_form(
@@ -445,6 +470,15 @@ def discover_catalog_names():
     return sorted(names)
 
 
+def catalog_title(name):
+    """Return the title of the catalog tool `name`, falling back to `name`.
+    """
+    tool = api.get_tool(name, default=None)
+    if tool is None:
+        return api.safe_unicode(name)
+    return api.safe_unicode(clean(getattr(tool, "title", None)) or name)
+
+
 def discovered_catalog(name):
     """Build a catalog config dict for an auto-discovered catalog.
 
@@ -452,13 +486,9 @@ def discovered_catalog(name):
     the catalog tool title (an operator can rename it in the control
     panel); no search prefix is assigned automatically.
     """
-    tool = api.get_tool(name, default=None)
-    label = name
-    if tool is not None:
-        label = clean(getattr(tool, "title", None)) or name
     return {
         "name": name,
-        "label": api.safe_unicode(label),
+        "label": catalog_title(name),
         "prefix": None,
         "portal_types": [],
         "index": None,
@@ -499,6 +529,41 @@ def get_catalogs():
         catalogs.append(discovered_catalog(name))
         known.add(name)
     return catalogs
+
+
+def discovered_catalog_row(name):
+    """Build a full `ISpotlightCatalog` grid row for a discovered catalog.
+
+    Enabled by default (matching the search-time behavior), labeled from
+    the catalog tool title. Used to seed the control panel grid so every
+    installed catalog is visible and toggleable without typing an id.
+    """
+    return complete_catalog_row({
+        "catalog": name,
+        "label": catalog_title(name),
+        "enabled": True,
+    })
+
+
+def merged_catalog_rows():
+    """Return the full catalog row set for the control panel grid.
+
+    The stored rows plus a row for every installed catalog not yet
+    listed, so the grid always shows all catalogs and any of them can be
+    enabled, disabled, labeled or prefixed without typing a catalog id.
+    Saving the form persists whatever rows are submitted (materializing
+    the discovered ones); newly installed add-on catalogs keep appearing
+    here on the next render.
+    """
+    records = get_record("catalogs", default=DEFAULT_CATALOGS)
+    rows = [complete_catalog_row(dict(record)) for record in records]
+    known = {row["catalog"] for row in rows if row.get("catalog")}
+    for name in discover_catalog_names():
+        if name in known:
+            continue
+        rows.append(discovered_catalog_row(name))
+        known.add(name)
+    return rows
 
 
 def get_commands():
