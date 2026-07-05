@@ -71,17 +71,42 @@ settings link inside the spotlight itself (shown to users with the
 - **Maximum results** / **Minimum characters** / **Search debounce**: Tune the
   search behavior.
 - **Highlight matches**: Highlight the matching parts of the search term.
-- **Catalogs**: A grid of the catalogs to search. Each row has a `catalog`,
-  `label`, optional `prefix` (scopes a search to a single catalog, e.g. typing
-  `s:water`), `portal_types`, `index`, `sort_on`, `sort_order` and `enabled`.
+- **Catalogs**: A grid of the catalogs to search. Every installed SENAITE
+  catalog is listed here automatically (see Catalog auto-discovery below).
+  Each row has a `catalog`, `label`, optional `prefix` (scopes a search to a
+  single catalog, e.g. typing `s:water`), `portal_types`, `index`, `sort_on`,
+  `sort_order` and `enabled`.
 - **Commands**: A grid of command palette actions. Each row has an `id`,
   `title`, `icon`, `url` (may contain the `${portal_url}` placeholder), an
   optional `permission` (the command is only shown to users holding it) and
   `keywords`.
 
+### Catalog auto-discovery
+
+Every installed SENAITE catalog is added to the search scope automatically.
+Discovery finds all catalog tools that provide the `ISenaiteCatalogObject`
+marker (implemented by `senaite.core`'s `BaseCatalog`, and so inherited by
+every add-on catalog), which means installing an add-on such as
+`senaite.storage` makes its catalog searchable without any configuration.
+
+Discovered catalogs show up as rows in the **Catalogs** grid, so the control
+panel always lists all catalogs. From there you can:
+
+- Uncheck **Enabled** to exclude a catalog from the search.
+- Set a **Label** shown in the scope bar, or a **Prefix** for scoped searches
+  (e.g. `s:water`).
+- Reorder the rows to change the order of the scope tabs.
+
+The internal bookkeeping catalogs (analyses, audit log, import logs,
+attachments) ship as disabled rows, so they stay out of the search by default
+while remaining one checkbox away. Saving the control panel persists the list;
+catalogs installed afterwards keep appearing automatically.
+
 The settings are stored in the registry under the `senaite.app.spotlight`
-prefix. Add-ons can contribute additional catalogs and commands by shipping
-their own `registry.xml` that appends to the list fields with `purge="false"`:
+prefix. Catalogs need no manual entry thanks to auto-discovery, but add-ons
+can still contribute command palette actions (or pre-seed a catalog's label
+or prefix) by shipping their own `registry.xml` that appends to the list
+fields with `purge="false"`:
 
 ```xml
 <registry>
