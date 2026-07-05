@@ -21,6 +21,12 @@
 import json
 import re
 
+try:
+    from html import unescape as html_unescape  # py3
+except ImportError:  # pragma: no cover
+    from HTMLParser import HTMLParser
+    html_unescape = HTMLParser().unescape
+
 from bika.lims import api
 from bika.lims.api import APIError
 from Missing import Missing
@@ -33,6 +39,15 @@ from senaite.app.spotlight.controlpanel import get_config
 from senaite.app.spotlight.interfaces import ISpotlightSearchAdapter
 from senaite.core.api.catalog import to_searchable_text_qs
 from zope.interface import implementer
+
+# Matches any HTML tag. Used to strip markup from result descriptions so
+# rich-text fields (e.g. a storage facility address) render as plain text
+# in the search overlay instead of showing raw `<address>`/`<br/>` markup.
+HTML_TAG_RE = re.compile(r"<[^>]+>")
+
+# Matches a `<br>` / `<br/>` break tag, turned into a space so words on
+# separate lines do not run together once the tags are removed.
+HTML_BREAK_RE = re.compile(r"(?i)<\s*br\s*/?\s*>")
 
 # Order of preferred searchable text indexes to query per catalog.
 SEARCHABLE_TEXT_INDEXES = [
@@ -388,6 +403,24 @@ def make_query(catalog, term, limit, state=None):
     return query
 
 
+def strip_html(text):
+    """Return `text` with HTML markup removed and whitespace collapsed.
+
+    Rich-text fields (e.g. an `AddressField` rendering as
+    `<address>...<br/>...</address>`) would otherwise show their raw tags
+    in the search overlay, which escapes HTML. Break tags become spaces so
+    words on separate lines stay separated, the remaining tags are dropped
+    and character entities are unescaped.
+    """
+    text = api.safe_unicode(text or u"")
+    if not text:
+        return u""
+    text = HTML_BREAK_RE.sub(u" ", text)
+    text = HTML_TAG_RE.sub(u" ", text)
+    text = html_unescape(text)
+    return re.sub(r"\s+", u" ", text).strip()
+
+
 def get_brain_info(brain, catalog=None):
     """Extract the relevant info from a catalog brain
     """
@@ -409,7 +442,7 @@ def get_brain_info(brain, catalog=None):
         "uid": api.get_uid(brain),
         "title": api.get_title(brain),
         "title_or_id": api.get_title(brain) or api.get_id(brain),
-        "description": api.get_description(brain),
+        "description": strip_html(api.get_description(brain)),
         "url": api.get_url(brain),
         "portal_type": api.get_portal_type(brain),
         "review_state": api.get_review_status(brain),

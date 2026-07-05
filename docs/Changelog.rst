@@ -1,6 +1,13 @@
-2.7.1 (unreleased)
+2.7.0 (unreleased)
 ------------------
 
+- Auto-discover installed SENAITE catalogs into the search scope, so add-on
+  catalogs (e.g. senaite.storage) are searchable without manual configuration;
+  configured rows still win for labels, prefixes, ordering and disabling, and
+  the internal catalogs (analyses, audit log, import logs, attachments) ship as
+  disabled rows
+- Strip HTML markup from result descriptions so rich-text fields (e.g. a
+  storage facility address) render as plain text instead of raw tags
 - #33 Rewrite the spotlight search as a React component
 - Consume the shared React instance exposed by senaite.core (Webpack
   externals) instead of bundling a copy
@@ -43,11 +50,6 @@
 - Ignore invalid/non-sortable "sort_on" indexes and handle catalog errors
   gracefully, so a misconfigured catalog no longer breaks the whole search
 - Redesigned the look and feel as a modern command palette with dark mode
-
-
-2.7.0 (unreleased)
-------------------
-
 - #32 Handle catalog search errors gracefully
 - #31 JQuery3 compatibility
 
