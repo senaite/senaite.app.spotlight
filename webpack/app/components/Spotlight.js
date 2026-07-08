@@ -19,9 +19,10 @@ import {
   matchHotkey,
   narrowResults,
   parseQuery,
-  resolveScope,
+  resolveScopes,
   savePref,
   sortResults,
+  toggleScope,
 } from "../utils";
 
 
@@ -38,7 +39,7 @@ const Spotlight = ({ config }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [scope, setScope] = useState(null);
+  const [scope, setScope] = useState([]);
   const [sortBy, setSortBy] = useState(loadPref("sortBy", "relevance"));
   const [dynamicCommands, setDynamicCommands] = useState([]);
 
@@ -58,12 +59,13 @@ const Spotlight = ({ config }) => {
   const {
     term, prefix, state, commandMode, commandTerm, stateMode, statePartial,
   } = useMemo(() => parseQuery(query), [query]);
-  const effectiveScope = resolveScope(catalogs, scope, prefix);
+  // the selected catalog scopes (a list of names; empty means "All")
+  const effectiveScopes = resolveScopes(catalogs, scope, prefix);
+  const scoped = effectiveScopes.length > 0;
 
-  // browse mode: an empty term while scoped to a single catalog lists its
-  // first results (the catalog chips / "s:" prefix act as a browse affordance)
-  const browsing =
-    !commandMode && !stateMode && !term && Boolean(effectiveScope);
+  // browse mode: an empty term while scoped to one or more catalogs lists
+  // their first results (chips / "s:" prefix act as a browse affordance)
+  const browsing = !commandMode && !stateMode && !term && scoped;
 
   // the default query hides inactive objects; surface that (and the
   // "is:inactive" escape hatch) whenever results/browse are shown and no
@@ -72,15 +74,15 @@ const Spotlight = ({ config }) => {
     !commandMode && !stateMode && !state
     && (browsing || term.length >= minChars);
 
-  // states to suggest: scoped to the active catalog, else the union of all
+  // states to suggest: the union of the states of the scoped catalogs, or
+  // of every catalog when nothing is scoped ("All")
   const scopedStates = useMemo(() => {
-    if (effectiveScope) {
-      const cat = catalogs.find((c) => c.name === effectiveScope);
-      return (cat && cat.states) || [];
-    }
+    const pool = scoped
+      ? catalogs.filter((c) => effectiveScopes.indexOf(c.name) >= 0)
+      : catalogs;
     const seen = {};
     const out = [];
-    catalogs.forEach((c) =>
+    pool.forEach((c) =>
       (c.states || []).forEach((s) => {
         if (!seen[s.id]) {
           seen[s.id] = true;
@@ -89,7 +91,7 @@ const Spotlight = ({ config }) => {
       })
     );
     return out;
-  }, [catalogs, effectiveScope]);
+  }, [catalogs, effectiveScopes, scoped]);
 
   const suggestions = useMemo(() => {
     if (!stateMode) {
@@ -116,9 +118,9 @@ const Spotlight = ({ config }) => {
       return commandTerm ? filterCommands(all, commandTerm) : all;
     }
     // outside command mode, commands only show in the unscoped ("All") view
-    return effectiveScope ? [] : filterCommands(commandsConfig, term);
+    return scoped ? [] : filterCommands(commandsConfig, term);
   }, [commandsConfig, dynamicCommands, term, commandMode, commandTerm,
-    stateMode, effectiveScope]);
+    stateMode, scoped]);
 
   const sortedResults = useMemo(
     // no catalog results in command or state-suggestion mode
@@ -148,12 +150,15 @@ const Spotlight = ({ config }) => {
     if (filterValue) {
       params.push("search_filter=" + encodeURIComponent(filterValue));
     }
-    if (effectiveScope) {
-      params.push("search_review_state=" + encodeURIComponent(effectiveScope));
+    // the standalone listing supports a single catalog tab, so only carry
+    // the scope through when exactly one catalog is selected
+    if (effectiveScopes.length === 1) {
+      params.push(
+        "search_review_state=" + encodeURIComponent(effectiveScopes[0]));
     }
     const query = params.length ? "?" + params.join("&") : "";
     return (config.search_url || "") + query;
-  }, [config.search_url, term, state, effectiveScope]);
+  }, [config.search_url, term, state, effectiveScopes]);
 
   // Run the actual search request, ignoring stale responses
   const runSearch = useCallback(
@@ -202,10 +207,10 @@ const Spotlight = ({ config }) => {
       return undefined;
     }
     debounceTimer.current = setTimeout(() => {
-      runSearch(term, effectiveScope, state);
+      runSearch(term, effectiveScopes.join(","), state);
     }, debounceMs);
     return () => clearTimeout(debounceTimer.current);
-  }, [term, effectiveScope, state, commandMode, stateMode, browsing, open,
+  }, [term, effectiveScopes, state, commandMode, stateMode, browsing, open,
     minChars, debounceMs, runSearch]);
 
   // Lazily fetch the dynamic commands the first time the command palette is
@@ -244,8 +249,13 @@ const Spotlight = ({ config }) => {
     setQuery("");
     setResults([]);
     setError(null);
-    setScope(null);
+    setScope([]);
     setActiveIndex(0);
+  }, []);
+
+  // toggle a catalog scope chip; Ctrl/Meta click keeps the other selections
+  const onScope = useCallback((name, additive) => {
+    setScope((current) => toggleScope(current, name, additive));
   }, []);
 
   const openOverlay = useCallback(() => {
@@ -386,7 +396,7 @@ const Spotlight = ({ config }) => {
         <ScopeBar
           catalogs={catalogs}
           scope={scope}
-          onScope={setScope}
+          onScope={onScope}
           sortBy={sortBy}
           onSort={onSort}
         />

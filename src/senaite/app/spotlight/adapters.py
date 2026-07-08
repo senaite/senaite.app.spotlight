@@ -136,13 +136,15 @@ class SpotlightSearchAdapter(object):
     def resolve_catalogs(self, prefix=None, catalog=None):
         """Return (catalogs, scoped) for the query
 
-        `scoped` is True when the search is narrowed to an explicit catalog or
-        a matching prefix; this enables the "browse first results" mode for an
-        empty term.
+        `scoped` is True when the search is narrowed to one or more explicit
+        catalogs or a matching prefix; this enables the "browse first
+        results" mode for an empty term. `catalog` may be a single name or a
+        comma separated list (multi-catalog selection).
         """
         catalogs = get_searchable_catalogs()
-        if catalog:
-            return [c for c in catalogs if c.get("name") == catalog], True
+        names = to_catalog_names(catalog)
+        if names:
+            return [c for c in catalogs if c.get("name") in names], True
         if prefix:
             scoped = [c for c in catalogs if c.get("prefix") == prefix]
             if scoped:
@@ -305,6 +307,22 @@ def resolve_review_states(indexes, token):
         if is_sublist(needle, segments):
             matched.append(value)
     return matched
+
+
+def to_catalog_names(catalog):
+    """Parse the request `catalog` parameter into a list of catalog names
+
+    Accepts a comma separated string (as sent by the overlay for a
+    multi-catalog selection) or a list; blank entries are dropped.
+    """
+    if not catalog:
+        return []
+    if isinstance(catalog, (list, tuple)):
+        values = catalog
+    else:
+        values = api.safe_unicode(catalog).split(",")
+    names = [api.safe_unicode(value).strip() for value in values]
+    return [name for name in names if name]
 
 
 def split_prefix(query):

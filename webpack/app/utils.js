@@ -224,19 +224,43 @@ export const sortResults = (results, sortBy) => {
 };
 
 
-// Resolve the catalog to scope the search to: the manual scope first, then
-// the prefix token typed into the search field
-export const resolveScope = (catalogs, scope, prefix) => {
-  if (scope) {
+// Resolve the catalogs to scope the search to: the manually selected scopes
+// first (a list of catalog names), then the prefix token typed into the
+// search field. Returns a list of catalog names (empty means "All").
+export const resolveScopes = (catalogs, scope, prefix) => {
+  if (scope && scope.length) {
     return scope;
   }
   if (prefix) {
     const match = catalogs.find((catalog) => catalog.prefix === prefix);
     if (match) {
-      return match.name;
+      return [match.name];
     }
   }
-  return null;
+  return [];
+};
+
+
+// Toggle a catalog in the current scope selection.
+//
+// - `name` null clears the selection ("All").
+// - `additive` (Ctrl/Meta click) toggles membership, keeping the others.
+// - a plain click selects only `name`, or clears it when it was the sole
+//   selection (so clicking an active chip again returns to "All").
+export const toggleScope = (scope, name, additive) => {
+  const current = scope || [];
+  if (name === null) {
+    return [];
+  }
+  if (additive) {
+    return current.indexOf(name) >= 0
+      ? current.filter((entry) => entry !== name)
+      : current.concat([name]);
+  }
+  if (current.length === 1 && current[0] === name) {
+    return [];
+  }
+  return [name];
 };
 
 
