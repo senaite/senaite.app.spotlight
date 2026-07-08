@@ -264,6 +264,18 @@ export const toggleScope = (scope, name, additive) => {
 };
 
 
+// Whether the client runs on a Mac, where the multi-select modifier is the
+// Command (Meta) key rather than Control
+export const isMac = () =>
+  typeof navigator !== "undefined" &&
+  /Mac|iPod|iPhone|iPad/.test(
+    navigator.platform || navigator.userAgent || "");
+
+
+// Symbol of the modifier key used for multi-select ("⌘" on Mac, else "Ctrl")
+export const multiSelectKey = () => (isMac() ? "⌘" : "Ctrl");
+
+
 // Translate a message using the global SENAITE message factory if available
 export const _t = (msgid) => {
   if (typeof window._t === "function") {

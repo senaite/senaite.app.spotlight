@@ -17,6 +17,7 @@ import {
   filterCommands,
   loadPref,
   matchHotkey,
+  multiSelectKey,
   narrowResults,
   parseQuery,
   resolveScopes,
@@ -433,6 +434,10 @@ const Spotlight = ({ config }) => {
                 </li>
                 <li>
                   <code>is:received</code> {_t("filter by workflow state")}
+                </li>
+                <li>
+                  <code>{multiSelectKey()}</code>{" "}
+                  {_t("click a catalog to search several at once")}
                 </li>
               </ul>
             </div>

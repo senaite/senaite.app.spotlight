@@ -20,6 +20,14 @@ const ScopeBar = ({ catalogs, scope, onScope, sortBy, onSort }) => {
         type="button"
         className={className}
         onClick={(event) => onScope(key, event.ctrlKey || event.metaKey)}
+        onContextMenu={(event) => {
+          // macOS turns Ctrl+click into a context-menu event, so honor it
+          // here as an additive toggle for the STRG+click multi-select
+          if (event.ctrlKey) {
+            event.preventDefault();
+            onScope(key, true);
+          }
+        }}
       >
         {label}
       </button>
