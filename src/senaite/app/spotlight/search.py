@@ -51,6 +51,10 @@ class SearchView(ListingView):
     def __init__(self, context, request):
         super(SearchView, self).__init__(context, request)
 
+        # no "Add" action, this is a read-only search page and not the
+        # context's folder contents
+        self.context_actions = {}
+
         self.catalogs = get_catalogs()
         # search uses its own merged backend, so no catalog content filter
         self.catalog = "uid_catalog"

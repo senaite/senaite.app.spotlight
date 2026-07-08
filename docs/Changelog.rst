@@ -1,6 +1,7 @@
 2.7.1 (unreleased)
 ------------------
 
+- #35 Remove the "Add" action from the standalone search page
 - #33 Rewrite the spotlight search as a React component
 - Consume the shared React instance exposed by senaite.core (Webpack
   externals) instead of bundling a copy
