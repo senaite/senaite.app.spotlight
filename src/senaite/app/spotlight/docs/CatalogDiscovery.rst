@@ -103,6 +103,25 @@ unicode, which a programmatic registry write requires:
     >>> row["enabled"]
     True
 
+A cell left as the z3c.form `<NO_VALUE>` sentinel is treated as unset and
+falls back to the field default:
+
+    >>> row = cp.complete_catalog_row(
+    ...     {"catalog": u"senaite_catalog_x", "prefix": cp.NO_VALUE})
+    >>> row["prefix"]
+    u''
+
+Command rows are completed the same way, so a blank optional cell (icon,
+permission, keywords) never renders as the `<NO_VALUE>` marker:
+
+    >>> row = cp.complete_command_row(
+    ...     {"command_id": u"x", "title": u"X", "url": u"/x",
+    ...      "permission": cp.NO_VALUE})
+    >>> row["permission"]
+    u''
+    >>> sorted(row.keys())
+    ['command_id', 'icon', 'keywords', 'permission', 'title', 'url']
+
 
 Plain text descriptions
 -----------------------

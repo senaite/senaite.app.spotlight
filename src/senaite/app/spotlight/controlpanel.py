@@ -47,6 +47,9 @@ DEFAULT_HOTKEY = u"Control+Space"
 # Default maximum number of search results returned by the search adapter.
 DEFAULT_MAX_RESULTS = 25
 
+# z3c.form / DataGrid stores empty optional cells as this sentinel string
+NO_VALUE = u"<NO_VALUE>"
+
 # Empty defaults for every `ISpotlightCatalog` cell. Rows are always stored
 # with all keys present so the DataGrid widget renders the optional cells
 # blank instead of the z3c.form `<NO_VALUE>` marker for absent keys.
@@ -62,24 +65,49 @@ CATALOG_ROW_DEFAULTS = {
     "show_for_clients": True,
 }
 
+# Empty defaults for every `ISpotlightCommand` cell (same rationale as
+# `CATALOG_ROW_DEFAULTS`): rows are stored complete so the DataGrid never
+# renders the `<NO_VALUE>` marker for a blank optional cell.
+COMMAND_ROW_DEFAULTS = {
+    "command_id": u"",
+    "title": u"",
+    "icon": u"",
+    "url": u"",
+    "permission": u"",
+    "keywords": u"",
+}
 
-def complete_catalog_row(row):
-    """Return `row` as a full `ISpotlightCatalog` dict.
 
-    Missing (or `None`) cells are filled from `CATALOG_ROW_DEFAULTS`, so a
-    stored row never has absent keys that would render as `<NO_VALUE>`.
-    Byte-string values are coerced to unicode: the row schema fields are
-    `TextLine` (unicode), and a programmatic registry write validates
-    strictly (unlike the GenericSetup import, which coerces silently).
+def complete_row(row, defaults):
+    """Return `row` as a full dict based on `defaults`.
+
+    Missing (or `None`) cells, and cells left as the z3c.form `<NO_VALUE>`
+    sentinel, are filled from `defaults`, so a stored row never carries an
+    absent key or a raw `<NO_VALUE>` marker. Byte-string values are coerced
+    to unicode: the row schema fields are `TextLine` (unicode), and a
+    programmatic registry write validates strictly (unlike the GenericSetup
+    import, which coerces silently).
     """
-    full = dict(CATALOG_ROW_DEFAULTS)
+    full = dict(defaults)
     for key, value in row.items():
-        if value is None:
+        if value is None or value == NO_VALUE:
             continue
         if isinstance(value, bytes):
             value = api.safe_unicode(value)
         full[key] = value
     return full
+
+
+def complete_catalog_row(row):
+    """Return `row` as a full `ISpotlightCatalog` dict.
+    """
+    return complete_row(row, CATALOG_ROW_DEFAULTS)
+
+
+def complete_command_row(row):
+    """Return `row` as a full `ISpotlightCommand` dict.
+    """
+    return complete_row(row, COMMAND_ROW_DEFAULTS)
 
 
 # Default catalogs to search. Each entry maps to the `ISpotlightCatalog` row
@@ -128,7 +156,7 @@ ACTIVE_STATE_IDS = (u"active", u"inactive")
 # Default command palette actions. Each entry maps to the `ISpotlightCommand`
 # row schema. A command with a `permission` is only shown to users that hold
 # the permission on the portal.
-DEFAULT_COMMANDS = [
+DEFAULT_COMMANDS = [complete_command_row(row) for row in [
     {"command_id": u"add-sample", "title": u"Add Samples",
      "icon": u"fas fa-plus", "url": u"${portal_url}/samples/ar_add",
      "permission": AddAnalysisRequest, "keywords": u"new, create, register"},
@@ -145,7 +173,7 @@ DEFAULT_COMMANDS = [
      "permission": ManageBika},
     {"command_id": u"logout", "title": u"Logout",
      "icon": u"fas fa-sign-out-alt", "url": u"${portal_url}/logout"},
-]
+]]
 
 
 class ISpotlightCatalog(Interface):
@@ -218,10 +246,6 @@ class ISpotlightCatalog(Interface):
 
     show_for_clients = schema.Bool(
         title=_(u"Show for clients"),
-        description=_(
-            u"Also search this catalog for client contacts. Lab-only "
-            u"catalogs (setup, clients, contacts) are hidden from them "
-            u"by default."),
         default=True,
         required=False,
     )
@@ -410,10 +434,6 @@ class SpotlightControlPanelForm(RegistryEditForm):
 
 SpotlightControlPanelView = layout.wrap_form(
     SpotlightControlPanelForm, ControlPanelFormWrapper)
-
-
-# z3c.form / DataGrid stores empty optional cells as this sentinel string
-NO_VALUE = u"<NO_VALUE>"
 
 
 def clean(value):

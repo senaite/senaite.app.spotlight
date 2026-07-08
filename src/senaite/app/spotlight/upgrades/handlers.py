@@ -22,12 +22,37 @@ from plone.registry.interfaces import IRegistry
 from senaite.app.spotlight import logger
 from senaite.app.spotlight.controlpanel import DEFAULT_CATALOGS
 from senaite.app.spotlight.controlpanel import complete_catalog_row
+from senaite.app.spotlight.controlpanel import complete_command_row
 from zope.component import getUtility
 
 PROFILE_ID = "profile-senaite.app.spotlight:default"
 
 # Registry record holding the spotlight catalog rows
 CATALOGS_RECORD = "senaite.app.spotlight.catalogs"
+
+# Registry record holding the spotlight command rows
+COMMANDS_RECORD = "senaite.app.spotlight.commands"
+
+
+def to_2704(portal_setup):
+    """Update to version 2.7.0
+
+    Completes the persisted spotlight command rows and drops any leftover
+    `<NO_VALUE>` sentinel cells (as done for the catalog rows), so the
+    DataGrid renders the optional command cells (icon, permission,
+    keywords) blank.
+
+    :param portal_setup: The portal_setup tool
+    """
+    logger.info("Clean up spotlight command rows ...")
+    registry = getUtility(IRegistry)
+    rows = registry.get(COMMANDS_RECORD)
+    if not rows:
+        logger.info("No stored spotlight commands, nothing to do")
+        return
+    registry[COMMANDS_RECORD] = [
+        complete_command_row(dict(row)) for row in rows]
+    logger.info("Clean up spotlight command rows [DONE]")
 
 
 def to_2703(portal_setup):
@@ -39,6 +64,10 @@ def to_2703(portal_setup):
     worksheets, clients, contacts) become hidden from client contacts while
     every other catalog stays visible. Catalogs not shipped by default keep
     their value (or default to visible).
+
+    Also completes every row and drops any leftover `<NO_VALUE>` sentinel
+    cells (as the previous upgrade step did), so the DataGrid renders the
+    optional cells blank.
 
     :param portal_setup: The portal_setup tool
     """
@@ -52,13 +81,12 @@ def to_2703(portal_setup):
                 for row in DEFAULT_CATALOGS}
     updated = []
     for row in rows:
-        row = dict(row)
+        # complete the row and strip any "<NO_VALUE>" sentinel cells
+        row = complete_catalog_row(dict(row))
         name = row.get("catalog")
         if name in defaults:
             # authoritative shipped visibility for the default catalogs
             row["show_for_clients"] = defaults[name]
-        else:
-            row.setdefault("show_for_clients", True)
         updated.append(row)
     registry[CATALOGS_RECORD] = updated
     logger.info("Set 'show_for_clients' on spotlight catalogs [DONE]")
