@@ -25,7 +25,7 @@ from bika.lims import api
 from plone.app.layout.viewlets.common import ViewletBase
 from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
 from senaite.app.spotlight.controlpanel import get_config
-from senaite.app.spotlight.controlpanel import get_review_states
+from senaite.app.spotlight.controlpanel import get_state_suggestions
 from senaite.core.permissions import ManageSenaite
 
 
@@ -64,10 +64,10 @@ class SpotlightViewlet(ViewletBase):
             command for command in config["commands"]
             if self.allowed_command(command, portal)
         ]
-        # ship the available workflow states per catalog for the "is:<state>"
-        # autocomplete suggestions
+        # ship the available states per catalog for the "is:<state>"
+        # autocomplete suggestions (active/inactive plus workflow states)
         for catalog in config["catalogs"]:
-            catalog["states"] = get_review_states(catalog["name"])
+            catalog["states"] = get_state_suggestions(catalog["name"])
         config["portal_url"] = portal_url
         config["api_url"] = "{}/@@API/spotlight/search".format(portal_url)
         config["commands_url"] = "{}/@@API/spotlight/commands".format(

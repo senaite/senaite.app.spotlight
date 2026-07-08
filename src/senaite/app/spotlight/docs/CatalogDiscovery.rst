@@ -88,7 +88,7 @@ renders the `<NO_VALUE>` marker for a missing cell:
 
     >>> row = by_id["senaite_catalog_sample"]
     >>> sorted(row.keys())
-    ['catalog', 'enabled', 'index', 'label', 'portal_types', 'prefix', 'sort_on', 'sort_order']
+    ['catalog', 'enabled', 'index', 'label', 'portal_types', 'prefix', 'show_for_clients', 'sort_on', 'sort_order']
 
 `complete_catalog_row` fills the missing cells and coerces byte strings to
 unicode, which a programmatic registry write requires:

@@ -34,8 +34,8 @@ from Products.ZCatalog.Catalog import CatalogError
 from Products.ZCTextIndex.ParseTree import ParseError
 from Products.ZCTextIndex.ZCTextIndex import ZCTextIndex
 from senaite.app.spotlight import logger
-from senaite.app.spotlight.controlpanel import get_catalogs
 from senaite.app.spotlight.controlpanel import get_config
+from senaite.app.spotlight.controlpanel import get_searchable_catalogs
 from senaite.app.spotlight.interfaces import ISpotlightSearchAdapter
 from senaite.core.api.catalog import to_searchable_text_qs
 from zope.interface import implementer
@@ -63,6 +63,14 @@ MAX_RESULTS = 50
 # bounds the (cheap, metadata-only) scoring work; matches beyond this cap are
 # not considered for ranking.
 CANDIDATE_LIMIT = 100
+
+# State tokens that map to the `is_active` boolean index instead of the
+# workflow `review_state` index. Used as an escape hatch to reveal (or pin
+# to) deactivated objects, e.g. "is:inactive".
+ACTIVE_STATES = {
+    u"active": True,
+    u"inactive": False,
+}
 
 
 @implementer(ISpotlightSearchAdapter)
@@ -132,7 +140,7 @@ class SpotlightSearchAdapter(object):
         a matching prefix; this enables the "browse first results" mode for an
         empty term.
         """
-        catalogs = get_catalogs()
+        catalogs = get_searchable_catalogs()
         if catalog:
             return [c for c in catalogs if c.get("name") == catalog], True
         if prefix:
@@ -254,6 +262,18 @@ def split_state(query):
     return term, state
 
 
+def is_active_token(state):
+    """Return the `is_active` boolean for an "is:active"/"is:inactive" token
+
+    Returns True for "active", False for "inactive" and None for any other
+    (or empty) token, so the caller can tell an active-state token apart from
+    a workflow `review_state` token.
+    """
+    if not state:
+        return None
+    return ACTIVE_STATES.get(api.safe_unicode(state).lower())
+
+
 def is_sublist(needle, haystack):
     """Check if `needle` occurs as a contiguous sublist of `haystack`
     """
@@ -371,13 +391,28 @@ def make_query(catalog, term, limit, state=None):
         # no way to match all without a real index query
         return None
 
-    # filter by workflow state (e.g. "is:received"). If the catalog has no
-    # matching state, skip it entirely so the result set stays accurate.
-    if state:
+    # active/inactive and workflow state filtering. "is:active"/"is:inactive"
+    # map to the `is_active` boolean index; any other "is:<state>" token maps
+    # to the workflow `review_state` index. Without a token, inactive objects
+    # are hidden by default. All of it is guarded by the catalog actually
+    # having the index, so catalogs lacking `is_active` (e.g. uid_catalog) are
+    # searched unchanged.
+    active = is_active_token(state)
+    if active is not None:
+        # explicit escape hatch: reveal (or pin to) (in)active objects
+        if "is_active" in indexes:
+            query["is_active"] = active
+    elif state:
+        # explicit workflow state (e.g. "is:received"); do not force the
+        # active default, so states like "cancelled" stay findable. If the
+        # catalog has no matching state, skip it so results stay accurate.
         review_states = resolve_review_states(indexes, state)
         if not review_states:
             return None
         query["review_state"] = review_states
+    elif "is_active" in indexes:
+        # no state token: hide inactive objects by default
+        query["is_active"] = True
 
     portal_types = catalog.get("portal_types")
     if portal_types:

@@ -27,7 +27,7 @@ from bika.lims.utils import get_link_for
 from senaite.app.spotlight.adapters import rank_brains
 from senaite.app.spotlight.adapters import search_brains
 from senaite.app.spotlight.adapters import split_state
-from senaite.app.spotlight.controlpanel import get_catalogs
+from senaite.app.spotlight.controlpanel import get_searchable_catalogs
 from senaite.core.browser.listing.base import ListingView
 
 # Maximum number of merged results fetched per catalog
@@ -55,7 +55,7 @@ class SearchView(ListingView):
         # context's folder contents
         self.context_actions = {}
 
-        self.catalogs = get_catalogs()
+        self.catalogs = get_searchable_catalogs()
         # search uses its own merged backend, so no catalog content filter
         self.catalog = "uid_catalog"
         self.contentFilter = {}

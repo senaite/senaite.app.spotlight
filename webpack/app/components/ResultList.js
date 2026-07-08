@@ -19,16 +19,28 @@ const ResultList = ({
   activeRef,
   onHover,
   onSelect,
+  showActiveNote,
 }) => {
   suggestions = suggestions || [];
   const hasCommands = commands.length > 0;
   const hasResults = results.length > 0;
   const hasSuggestions = suggestions.length > 0;
 
+  // hint that inactive objects are filtered out, with the escape hatch
+  const activeNote = showActiveNote ? (
+    <span className="spotlight-active-note">
+      {_t("active only")} · <code>is:inactive</code>{" "}
+      {_t("to include")}
+    </span>
+  ) : null;
+
   if (!hasCommands && !hasResults && !hasSuggestions) {
     return (
       <div className="spotlight-empty text-muted">
         {_t("No results found")}
+        {activeNote ? (
+          <div className="spotlight-empty-note">{activeNote}</div>
+        ) : null}
       </div>
     );
   }
@@ -56,7 +68,11 @@ const ResultList = ({
       {hasResults ? (
         <div className="spotlight-section">
           <div className="spotlight-section-title">
-            {_t("Results")} <span className="text-muted">({results.length})</span>
+            <span>
+              {_t("Results")}{" "}
+              <span className="text-muted">({results.length})</span>
+            </span>
+            {activeNote}
           </div>
           {results.map((item, index) => {
             const globalIndex = commands.length + index;

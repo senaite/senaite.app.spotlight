@@ -59,6 +59,7 @@ CATALOG_ROW_DEFAULTS = {
     "sort_on": u"",
     "sort_order": u"ascending",
     "enabled": True,
+    "show_for_clients": True,
 }
 
 
@@ -93,13 +94,15 @@ def complete_catalog_row(row):
 DEFAULT_CATALOGS = [complete_catalog_row(row) for row in [
     {"catalog": "senaite_catalog_sample", "label": u"Samples",
      "prefix": u"s"},
-    {"catalog": "senaite_catalog_setup", "label": u"Setup"},
+    {"catalog": "senaite_catalog_setup", "label": u"Setup",
+     "show_for_clients": False},
     {"catalog": "senaite_catalog_worksheet", "label": u"Worksheets",
-     "prefix": u"w"},
+     "prefix": u"w", "show_for_clients": False},
     {"catalog": "senaite_catalog", "label": u"SENAITE"},
     {"catalog": "senaite_catalog_client", "label": u"Clients",
-     "prefix": u"c"},
-    {"catalog": "senaite_catalog_contact", "label": u"Contacts"},
+     "prefix": u"c", "show_for_clients": False},
+    {"catalog": "senaite_catalog_contact", "label": u"Contacts",
+     "show_for_clients": False},
     {"catalog": "senaite_catalog_report", "label": u"Reports",
      "prefix": u"r", "enabled": False},
     {"catalog": "senaite_catalog_label", "label": u"Labels",
@@ -117,6 +120,10 @@ DEFAULT_CATALOGS = [complete_catalog_row(row) for row in [
 # Zope meta_type shared by every `CatalogTool`, used to enumerate the
 # catalog tools in the portal root without waking unrelated objects.
 CATALOG_META_TYPE = "Plone Catalog Tool"
+
+# Pseudo-states surfaced in the "is:" autocomplete that map to the
+# `is_active` boolean index instead of a workflow `review_state`.
+ACTIVE_STATE_IDS = (u"active", u"inactive")
 
 # Default command palette actions. Each entry maps to the `ISpotlightCommand`
 # row schema. A command with a `permission` is only shown to users that hold
@@ -205,6 +212,16 @@ class ISpotlightCatalog(Interface):
 
     enabled = schema.Bool(
         title=_(u"Enabled"),
+        default=True,
+        required=False,
+    )
+
+    show_for_clients = schema.Bool(
+        title=_(u"Show for clients"),
+        description=_(
+            u"Also search this catalog for client contacts. Lab-only "
+            u"catalogs (setup, clients, contacts) are hidden from them "
+            u"by default."),
         default=True,
         required=False,
     )
@@ -425,6 +442,14 @@ def to_list(value):
     return [token.strip() for token in value.split(",") if token.strip()]
 
 
+def to_bool(value, default=True):
+    """Coerce a DataGrid value to a boolean, treating empty cells as default
+    """
+    if value in (None, u"", "", NO_VALUE):
+        return default
+    return bool(value)
+
+
 def parse_catalog(record):
     """Normalize a catalog row into a plain dictionary
     """
@@ -436,6 +461,7 @@ def parse_catalog(record):
         "index": clean(record.get("index")),
         "sort_on": clean(record.get("sort_on")),
         "sort_order": clean(record.get("sort_order")) or "ascending",
+        "show_for_clients": to_bool(record.get("show_for_clients", True)),
     }
 
 
@@ -494,6 +520,7 @@ def discovered_catalog(name):
         "index": None,
         "sort_on": None,
         "sort_order": "ascending",
+        "show_for_clients": True,
     }
 
 
@@ -529,6 +556,33 @@ def get_catalogs():
         catalogs.append(discovered_catalog(name))
         known.add(name)
     return catalogs
+
+
+def is_client_only_user():
+    """Whether the current user is a client contact without lab access
+
+    A client contact is bound to a client, which `api.get_current_client`
+    resolves via the user's contact link. Lab staff (lab contacts, managers,
+    anonymous, ...) are never bound to a client, so this never restricts lab
+    users regardless of how the "Client" role is granted.
+    """
+    return api.get_current_client() is not None
+
+
+def get_searchable_catalogs():
+    """Return the catalogs the current user is allowed to search
+
+    Same as `get_catalogs`, but for client-only users (client contacts)
+    drops every catalog whose `show_for_clients` flag is off, so a client
+    contact never searches lab objects they cannot access (setup, clients,
+    contacts by default). `get_catalogs` stays pure; the role-aware
+    filtering lives here, so every search entry point (modal adapter,
+    full-page search) shares it.
+    """
+    catalogs = get_catalogs()
+    if not is_client_only_user():
+        return catalogs
+    return [c for c in catalogs if c.get("show_for_clients", True)]
 
 
 def discovered_catalog_row(name):
@@ -603,6 +657,34 @@ def get_review_states(catalog_name):
     return states
 
 
+def has_active_index(catalog_name):
+    """Whether the catalog carries the `is_active` boolean index
+    """
+    tool = api.get_tool(catalog_name, default=None)
+    if tool is None:
+        return False
+    return "is_active" in tool._catalog.indexes
+
+
+def get_state_suggestions(catalog_name):
+    """Return the "is:<state>" autocomplete suggestions for a catalog
+
+    The active/inactive pseudo-states (mapped to the `is_active` boolean
+    index) come first when the catalog supports them, followed by the
+    distinct workflow review states. Used to drive the "is:" autocomplete.
+    """
+    suggestions = []
+    if has_active_index(catalog_name):
+        for state_id in ACTIVE_STATE_IDS:
+            suggestions.append(
+                {"id": state_id, "title": prettify_state(state_id)})
+    existing = {suggestion["id"] for suggestion in suggestions}
+    for state in get_review_states(catalog_name):
+        if state["id"] not in existing:
+            suggestions.append(state)
+    return suggestions
+
+
 def get_config():
     """Return the resolved spotlight configuration as a plain dictionary
     """
@@ -612,6 +694,6 @@ def get_config():
         "min_chars": get_record("min_chars", default=2),
         "debounce": get_record("debounce", default=200),
         "highlight": get_record("enable_highlighting", default=True),
-        "catalogs": get_catalogs(),
+        "catalogs": get_searchable_catalogs(),
         "commands": get_commands(),
     }

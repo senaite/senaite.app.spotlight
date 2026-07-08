@@ -1,6 +1,7 @@
 2.7.0 (unreleased)
 ------------------
 
+- #36 Hide inactive objects and lab-only catalogs from client contacts
 - #35 Remove the "Add" action from the standalone search page
 - #34 Auto-discover installed SENAITE catalogs into the spotlight search
 - #33 Rewrite the spotlight search as a React component
