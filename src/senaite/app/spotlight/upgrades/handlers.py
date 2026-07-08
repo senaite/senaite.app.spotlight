@@ -30,6 +30,40 @@ PROFILE_ID = "profile-senaite.app.spotlight:default"
 CATALOGS_RECORD = "senaite.app.spotlight.catalogs"
 
 
+def to_2703(portal_setup):
+    """Update to version 2.7.0
+
+    Backfills the new `show_for_clients` flag on installs that already
+    persisted the spotlight catalog rows. Rows are matched by catalog id
+    against the shipped defaults, so the lab-only catalogs (setup,
+    worksheets, clients, contacts) become hidden from client contacts while
+    every other catalog stays visible. Catalogs not shipped by default keep
+    their value (or default to visible).
+
+    :param portal_setup: The portal_setup tool
+    """
+    logger.info("Set 'show_for_clients' on spotlight catalogs ...")
+    registry = getUtility(IRegistry)
+    rows = registry.get(CATALOGS_RECORD)
+    if not rows:
+        logger.info("No stored spotlight catalogs, nothing to do")
+        return
+    defaults = {row.get("catalog"): row.get("show_for_clients", True)
+                for row in DEFAULT_CATALOGS}
+    updated = []
+    for row in rows:
+        row = dict(row)
+        name = row.get("catalog")
+        if name in defaults:
+            # authoritative shipped visibility for the default catalogs
+            row["show_for_clients"] = defaults[name]
+        else:
+            row.setdefault("show_for_clients", True)
+        updated.append(row)
+    registry[CATALOGS_RECORD] = updated
+    logger.info("Set 'show_for_clients' on spotlight catalogs [DONE]")
+
+
 def to_2702(portal_setup):
     """Update to version 2.7.0
 
