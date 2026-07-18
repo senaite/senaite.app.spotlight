@@ -65,6 +65,13 @@ const Spotlight = ({ config }) => {
   const browsing =
     !commandMode && !stateMode && !term && Boolean(effectiveScope);
 
+  // the default query hides inactive objects; surface that (and the
+  // "is:inactive" escape hatch) whenever results/browse are shown and no
+  // explicit state token overrides the active-only default
+  const showActiveNote =
+    !commandMode && !stateMode && !state
+    && (browsing || term.length >= minChars);
+
   // states to suggest: scoped to the active catalog, else the union of all
   const scopedStates = useMemo(() => {
     if (effectiveScope) {
@@ -393,12 +400,14 @@ const Spotlight = ({ config }) => {
               commands={commands}
               results={sortedResults}
               suggestions={suggestions}
-              term={commandMode ? commandTerm : stateMode ? statePartial : term}
+              term={commandMode ? commandTerm
+                : stateMode ? statePartial : term}
               highlight={highlight}
               activeIndex={activeIndex}
               activeRef={activeRef}
               onHover={setActiveIndex}
               onSelect={selectEntry}
+              showActiveNote={showActiveNote}
             />
           ) : (
             <div className="spotlight-hint text-muted">
