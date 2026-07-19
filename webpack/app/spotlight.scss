@@ -569,3 +569,51 @@
   .spotlight-result,
   .spotlight-command { animation: none; }
 }
+
+/* -------------------------------------------- spotlight control panel grid */
+/* The spotlight bundle CSS loads on every page (via the viewlet), so scope
+   the DataGrid compacting strictly to the spotlight control panel to avoid
+   touching other control panels. The default grid spreads each column to its
+   input's natural width, overflowing very wide screens; this keeps it inside
+   a readable column and lets the cells shrink responsively. */
+body.template-spotlight-controlpanel {
+  .datagridwidget-table-view {
+    width: 100%;
+    max-width: 100%;
+    table-layout: fixed;
+
+    th,
+    td {
+      padding: 0.2rem 0.35rem;
+      vertical-align: top;
+      overflow: hidden;
+    }
+
+    /* header title + description: smaller and allowed to wrap */
+    th {
+      font-size: 0.78rem;
+
+      .formHelp {
+        font-size: 0.7rem;
+        font-weight: 400;
+      }
+    }
+
+    /* let the inputs shrink to their cell instead of forcing a min width */
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      min-width: 0;
+      padding: 0.2rem 0.4rem;
+      font-size: 0.8rem;
+    }
+
+    /* the auto-append/actions column stays only as wide as its buttons */
+    .datagridwidget-cell.actions-column,
+    td.datagridwidget-manipulator {
+      width: 1%;
+      white-space: nowrap;
+    }
+  }
+}

@@ -18,6 +18,7 @@ Needed imports:
 
     >>> from senaite.app.spotlight import controlpanel as cp
     >>> from senaite.app.spotlight.adapters import strip_html
+    >>> from senaite.app.spotlight.adapters import to_catalog_names
 
 
 Discovering installed catalogs
@@ -102,6 +103,51 @@ unicode, which a programmatic registry write requires:
     u'ascending'
     >>> row["enabled"]
     True
+
+A cell left as the z3c.form `<NO_VALUE>` sentinel is treated as unset and
+falls back to the field default:
+
+    >>> row = cp.complete_catalog_row(
+    ...     {"catalog": u"senaite_catalog_x", "prefix": cp.NO_VALUE})
+    >>> row["prefix"]
+    u''
+
+Command rows are completed the same way, so a blank optional cell (icon,
+permission, keywords) never renders as the `<NO_VALUE>` marker:
+
+    >>> row = cp.complete_command_row(
+    ...     {"command_id": u"x", "title": u"X", "url": u"/x",
+    ...      "permission": cp.NO_VALUE})
+    >>> row["permission"]
+    u''
+    >>> sorted(row.keys())
+    ['command_id', 'icon', 'keywords', 'permission', 'title', 'url']
+
+
+Multi-catalog scope
+-------------------
+
+The overlay can scope a search to several catalogs at once (Ctrl/Meta click
+on the scope chips). The selection is sent as a comma separated `catalog`
+parameter, which `to_catalog_names` parses into a clean list of names:
+
+    >>> to_catalog_names("senaite_catalog_sample,senaite_catalog")
+    [u'senaite_catalog_sample', u'senaite_catalog']
+
+Blank entries and surrounding whitespace are dropped, and a list is
+accepted as well:
+
+    >>> to_catalog_names(" a , , b ")
+    [u'a', u'b']
+    >>> to_catalog_names(["a", "b"])
+    [u'a', u'b']
+
+An empty selection ("All") yields an empty list:
+
+    >>> to_catalog_names("")
+    []
+    >>> to_catalog_names(None)
+    []
 
 
 Plain text descriptions
