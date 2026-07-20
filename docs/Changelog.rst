@@ -1,6 +1,7 @@
 2.7.0 (unreleased)
 ------------------
 
+- #38 Fix endless search loop from an unstable debounce dependency
 - #37 Improve spotlight catalog appearance and handling
 - #36 Hide inactive objects and lab-only catalogs from client contacts
 - #35 Remove the "Add" action from the standalone search page

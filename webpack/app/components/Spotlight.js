@@ -28,8 +28,13 @@ import {
 
 
 const Spotlight = ({ config }) => {
-  const catalogs = config.catalogs || [];
-  const commandsConfig = config.commands || [];
+  // Memoize the config-derived arrays: a fresh `[]` on every render would
+  // change the identity of `effectiveScopes` below, which is a dependency of
+  // the debounced search effect, re-arming it on every render and looping the
+  // search endlessly once a term is present.
+  const catalogs = useMemo(() => config.catalogs || [], [config.catalogs]);
+  const commandsConfig = useMemo(
+    () => config.commands || [], [config.commands]);
   const highlight = config.highlight !== false;
   const minChars = config.min_chars || 2;
   const debounceMs = config.debounce || 200;
@@ -60,9 +65,15 @@ const Spotlight = ({ config }) => {
   const {
     term, prefix, state, commandMode, commandTerm, stateMode, statePartial,
   } = useMemo(() => parseQuery(query), [query]);
-  // the selected catalog scopes (a list of names; empty means "All")
-  const effectiveScopes = resolveScopes(catalogs, scope, prefix);
+  // the selected catalog scopes (a list of names; empty means "All"). Memoized
+  // so a stable identity feeds the debounced search effect (see `catalogs`).
+  const effectiveScopes = useMemo(
+    () => resolveScopes(catalogs, scope, prefix), [catalogs, scope, prefix]);
   const scoped = effectiveScopes.length > 0;
+  // Primitive key for the scopes, so the debounced search effect depends on a
+  // stable string rather than an array identity (which would re-arm it on
+  // every render even if the memo above were ever dropped).
+  const scopeKey = effectiveScopes.join(",");
 
   // browse mode: an empty term while scoped to one or more catalogs lists
   // their first results (chips / "s:" prefix act as a browse affordance)
@@ -208,10 +219,10 @@ const Spotlight = ({ config }) => {
       return undefined;
     }
     debounceTimer.current = setTimeout(() => {
-      runSearch(term, effectiveScopes.join(","), state);
+      runSearch(term, scopeKey, state);
     }, debounceMs);
     return () => clearTimeout(debounceTimer.current);
-  }, [term, effectiveScopes, state, commandMode, stateMode, browsing, open,
+  }, [term, scopeKey, state, commandMode, stateMode, browsing, open,
     minChars, debounceMs, runSearch]);
 
   // Lazily fetch the dynamic commands the first time the command palette is
