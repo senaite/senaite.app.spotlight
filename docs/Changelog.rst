@@ -1,6 +1,7 @@
 2.7.0 (unreleased)
 ------------------
 
+- #39 Extend senaite.core's buildout.base.cfg instead of duplicating it
 - #38 Fix endless search loop from an unstable debounce dependency
 - #37 Improve spotlight catalog appearance and handling
 - #36 Hide inactive objects and lab-only catalogs from client contacts
