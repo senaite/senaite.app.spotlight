@@ -141,7 +141,7 @@ DEFAULT_CATALOGS = [complete_catalog_row(row) for row in [
      "enabled": False},
     {"catalog": "senaite_catalog_autoimportlog", "label": u"Auto Import Log",
      "enabled": False},
-    {"catalog": "senaite_attachments_catalog", "label": u"Attachments",
+    {"catalog": "senaite_catalog_attachments", "label": u"Attachments",
      "enabled": False},
 ]]
 

@@ -33,6 +33,45 @@ CATALOGS_RECORD = "senaite.app.spotlight.catalogs"
 # Registry record holding the spotlight command rows
 COMMANDS_RECORD = "senaite.app.spotlight.commands"
 
+# senaite.core renamed the attachments catalog to the naming of the others
+OLD_ATTACHMENTS_CATALOG = "senaite_attachments_catalog"
+ATTACHMENTS_CATALOG = "senaite_catalog_attachments"
+
+
+def to_2705(portal_setup):
+    """Update to version 2.7.0
+
+    Points the stored attachments catalog row to the new catalog id, as
+    senaite.core renamed `senaite_attachments_catalog` to
+    `senaite_catalog_attachments`. The row keeps its settings, so a site
+    that searched the attachments keeps doing so. When the new id is
+    listed already, e.g. because the control panel was saved after the
+    rename, the row of the old id is dropped.
+
+    :param portal_setup: The portal_setup tool
+    """
+    logger.info("Rename the attachments catalog row ...")
+    registry = getUtility(IRegistry)
+    rows = registry.get(CATALOGS_RECORD)
+    if not rows:
+        logger.info("No stored spotlight catalogs, nothing to do")
+        return
+    names = [row.get("catalog") for row in rows]
+    if OLD_ATTACHMENTS_CATALOG not in names:
+        logger.info("No row of the old attachments catalog [SKIP]")
+        return
+    renamed = ATTACHMENTS_CATALOG in names
+    updated = []
+    for row in rows:
+        row = dict(row)
+        if row.get("catalog") == OLD_ATTACHMENTS_CATALOG:
+            if renamed:
+                continue
+            row["catalog"] = ATTACHMENTS_CATALOG
+        updated.append(row)
+    registry[CATALOGS_RECORD] = updated
+    logger.info("Rename the attachments catalog row [DONE]")
+
 
 def to_2704(portal_setup):
     """Update to version 2.7.0
