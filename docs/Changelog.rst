@@ -1,6 +1,7 @@
 2.7.0 (unreleased)
 ------------------
 
+- #41 Fix the attachments catalog upgrade step failing with WrongContainedType
 - #40 Search the attachments catalog under its new id
 - #39 Extend senaite.core's buildout.base.cfg instead of duplicating it
 - #38 Fix endless search loop from an unstable debounce dependency
