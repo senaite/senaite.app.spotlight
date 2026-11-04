@@ -68,7 +68,9 @@ def to_2705(portal_setup):
             if renamed:
                 continue
             row["catalog"] = ATTACHMENTS_CATALOG
-        updated.append(row)
+        # complete the row, which also coerces the new id to unicode, as the
+        # registry validates the row schema strictly
+        updated.append(complete_catalog_row(row))
     registry[CATALOGS_RECORD] = updated
     logger.info("Rename the attachments catalog row [DONE]")
 
